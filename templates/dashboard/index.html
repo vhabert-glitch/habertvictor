@@ -1,0 +1,601 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — IA Formation Radar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-graph-up"></i> Tableau de bord</h2>
+    <div>
+        <a href="{% url 'survey:export_csv' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Secteur</label>
+                <select name="sector" class="form-select form-select-sm">
+                    <option value="">Tous les secteurs</option>
+                    {% for code, label in sectors %}
+                    <option value="{{ code }}" {% if current_sector == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Taille</label>
+                <select name="size" class="form-select form-select-sm">
+                    <option value="">Toutes les tailles</option>
+                    {% for code, label in sizes %}
+                    <option value="{{ code }}" {% if current_size == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Localisation</label>
+                <input type="text" name="location" class="form-control form-control-sm"
+                       value="{{ current_location }}" placeholder="Ville ou région">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-funnel"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <div class="display-6 text-primary fw-bold">{{ total_responses }}</div>
+                <div class="text-muted small">Réponses totales</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <div class="h4 text-success fw-bold mb-0">{{ top_sector }}</div>
+                <div class="text-muted small">Secteur le plus demandeur</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <div class="h5 text-warning fw-bold mb-0">{{ top_training|truncatechars:40 }}</div>
+                <div class="text-muted small">Formation la plus demandée</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-danger">
+            <div class="card-body">
+                <div class="h4 text-danger fw-bold mb-0">{{ avg_urgency }}</div>
+                <div class="text-muted small">Urgence moyenne</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques ligne 1 -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Besoins par secteur</div>
+            <div class="card-body">
+                <canvas id="chartSector" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Top formations demandées</div>
+            <div class="card-body">
+                <canvas id="chartTopTrainings" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques ligne 2 -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Carte de chaleur : Secteur x Formation</div>
+            <div class="card-body">
+                <canvas id="chartHeatmap" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Répartition par urgence</div>
+            <div class="card-body">
+                <canvas id="chartUrgency" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques ligne 3 -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Évolution des réponses dans le temps</div>
+            <div class="card-body">
+                <canvas id="chartTimeline" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Par taille d'entreprise</div>
+            <div class="card-body">
+                <canvas id="chartSize" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Budget moyen / secteur</div>
+            <div class="card-body">
+                <canvas id="chartBudget" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphique maturité -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Maturité IA par secteur</div>
+            <div class="card-body">
+                <canvas id="chartMaturity" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Compétences dans les offres d'emploi</div>
+            <div class="card-body">
+                <canvas id="chartJobSkills" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats extraction -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <h4><i class="bi bi-lightning"></i> Données extraites automatiquement</h4>
+    </div>
+    <div class="col">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-2">
+                <div class="h5 mb-0 text-primary">{{ total_jobs }}</div>
+                <small class="text-muted">Offres d'emploi</small>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-2">
+                <div class="h5 mb-0 text-success">{{ total_news }}</div>
+                <small class="text-muted">Articles</small>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-2">
+                <div class="h5 mb-0 text-info">{{ total_community }}</div>
+                <small class="text-muted">Posts communautaires</small>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-2">
+                <div class="h5 mb-0 text-warning">{{ total_signals }}</div>
+                <small class="text-muted">Signaux sociaux</small>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-2">
+                <div class="h5 mb-0 text-danger">{{ total_trends }}</div>
+                <small class="text-muted">Tendances</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques données extraites -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Compétences dans les communautés</div>
+            <div class="card-body">
+                <canvas id="chartCommunitySkills" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Sources d'offres d'emploi</div>
+            <div class="card-body">
+                <canvas id="chartJobSources" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Sources d'actualités</div>
+            <div class="card-body">
+                <canvas id="chartNewsSources" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tendances du marché (données détaillées) -->
+<div class="row g-3 mb-4">
+    <!-- Offres d'emploi -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white fw-semibold">
+                <i class="bi bi-briefcase"></i> Offres d'emploi IA récentes
+            </div>
+            <div class="card-body p-0" style="max-height:400px;overflow-y:auto">
+                {% if recent_jobs %}
+                <ul class="list-group list-group-flush">
+                    {% for job in recent_jobs %}
+                    <li class="list-group-item py-2">
+                        <div class="d-flex justify-content-between">
+                            <strong class="small">{{ job.title|truncatechars:70 }}</strong>
+                            <span class="badge bg-secondary">{{ job.source }}</span>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-geo-alt"></i> {{ job.location|default:"Non précisé" }}
+                            {% if job.skills %} — {{ job.skills|join:", " }}{% endif %}
+                        </small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small p-3">Lancez <code>python manage.py scrape_jobs</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Actualités -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white fw-semibold">
+                <i class="bi bi-newspaper"></i> Actualités IA
+            </div>
+            <div class="card-body p-0" style="max-height:400px;overflow-y:auto">
+                {% if recent_news %}
+                <ul class="list-group list-group-flush">
+                    {% for article in recent_news %}
+                    <li class="list-group-item py-2">
+                        <a href="{{ article.url }}" target="_blank" class="small fw-semibold text-decoration-none">
+                            {{ article.title|truncatechars:90 }}
+                        </a>
+                        <div>
+                            <span class="badge bg-light text-dark">{{ article.source }}</span>
+                            {% if article.published_at %}
+                            <small class="text-muted">{{ article.published_at|date:"d/m/Y" }}</small>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small p-3">Lancez <code>python manage.py scrape_news</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Posts communautaires -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white fw-semibold">
+                <i class="bi bi-chat-dots"></i> Reddit / HN / Stack Overflow
+            </div>
+            <div class="card-body p-0" style="max-height:400px;overflow-y:auto">
+                {% if recent_community %}
+                <ul class="list-group list-group-flush">
+                    {% for post in recent_community %}
+                    <li class="list-group-item py-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <a href="{{ post.url }}" target="_blank" class="small fw-semibold text-decoration-none">
+                                    {{ post.title|truncatechars:80 }}
+                                </a>
+                                <div>
+                                    <span class="badge bg-{% if post.platform == 'reddit' %}danger{% elif post.platform == 'hackernews' %}warning text-dark{% else %}primary{% endif %}">
+                                        {{ post.get_platform_display }}
+                                    </span>
+                                    <small class="text-muted">{{ post.subreddit }}</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-arrow-up"></i> {{ post.score }}
+                            </span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small p-3">Lancez <code>python manage.py scrape_communities</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Signaux sociaux + Trends -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-warning fw-semibold">
+                <i class="bi bi-graph-up-arrow"></i> Signaux & Tendances
+            </div>
+            <div class="card-body p-0" style="max-height:400px;overflow-y:auto">
+                {% if recent_signals %}
+                <div class="px-3 pt-2"><small class="fw-bold text-muted">SIGNAUX SOCIAUX</small></div>
+                <ul class="list-group list-group-flush">
+                    {% for signal in recent_signals %}
+                    <li class="list-group-item py-1">
+                        <small>
+                            <span class="badge bg-{% if signal.sentiment == 'positive' %}success{% elif signal.sentiment == 'negative' %}danger{% else %}secondary{% endif %}">
+                                {{ signal.get_platform_display }}
+                            </span>
+                            {{ signal.content_summary|truncatechars:90 }}
+                        </small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if recent_trends %}
+                <div class="px-3 pt-2"><small class="fw-bold text-muted">GITHUB TRENDING IA</small></div>
+                <ul class="list-group list-group-flush">
+                    {% for trend in recent_trends %}
+                    <li class="list-group-item py-1">
+                        <small>
+                            <strong>{{ trend.keyword }}</strong>
+                            <span class="badge bg-light text-dark"><i class="bi bi-star"></i> {{ trend.value|floatformat:0 }}</span>
+                        </small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if not recent_signals and not recent_trends %}
+                <p class="text-muted small p-3">Lancez <code>python manage.py run_extraction</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+const COLORS = [
+    '#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0',
+    '#6f42c1', '#fd7e14', '#20c997', '#6610f2', '#d63384'
+];
+
+// 1. Besoins par secteur
+const sectorData = {{ needs_by_sector|safe }};
+new Chart(document.getElementById('chartSector'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(sectorData),
+        datasets: [{
+            label: 'Nombre de besoins exprimés',
+            data: Object.values(sectorData),
+            backgroundColor: COLORS.slice(0, Object.keys(sectorData).length),
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+
+// 2. Top formations
+const trainingData = {{ top_trainings|safe }};
+new Chart(document.getElementById('chartTopTrainings'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(trainingData),
+        datasets: [{
+            label: 'Demandes',
+            data: Object.values(trainingData),
+            backgroundColor: COLORS.slice(0, Object.keys(trainingData).length),
+        }]
+    },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+});
+
+// 3. Heatmap (simulated as stacked bar)
+const heatmapData = {{ heatmap_data|safe }};
+const heatmapLabels = {{ heatmap_training_labels|safe }};
+if (heatmapData.length > 0) {
+    const heatmapDatasets = heatmapLabels.map((label, i) => ({
+        label: label,
+        data: heatmapData.map(row => row.values[i]),
+        backgroundColor: COLORS[i % COLORS.length],
+    }));
+    new Chart(document.getElementById('chartHeatmap'), {
+        type: 'bar',
+        data: {
+            labels: heatmapData.map(row => row.sector),
+            datasets: heatmapDatasets,
+        },
+        options: {
+            responsive: true,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+// 4. Timeline
+const timelineData = {{ timeline_data|safe }};
+new Chart(document.getElementById('chartTimeline'), {
+    type: 'line',
+    data: {
+        labels: Object.keys(timelineData),
+        datasets: [{
+            label: 'Réponses',
+            data: Object.values(timelineData),
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13,110,253,0.1)',
+            fill: true, tension: 0.3,
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+
+// 5. Urgence (donut)
+const urgencyData = {{ urgency_dist|safe }};
+new Chart(document.getElementById('chartUrgency'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(urgencyData),
+        datasets: [{
+            data: Object.values(urgencyData),
+            backgroundColor: ['#dc3545', '#ffc107', '#198754', '#0dcaf0'],
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+
+// 6. Taille (pie)
+const sizeData = {{ size_dist|safe }};
+new Chart(document.getElementById('chartSize'), {
+    type: 'pie',
+    data: {
+        labels: Object.keys(sizeData),
+        datasets: [{
+            data: Object.values(sizeData),
+            backgroundColor: COLORS.slice(0, Object.keys(sizeData).length),
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
+});
+
+// 7. Budget par secteur
+const budgetData = {{ budget_by_sector|safe }};
+new Chart(document.getElementById('chartBudget'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(budgetData),
+        datasets: [{
+            label: 'Budget moyen (€)',
+            data: Object.values(budgetData),
+            backgroundColor: '#198754',
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+
+// 8. Maturité par secteur (stacked bar)
+const maturityData = {{ maturity_by_sector|safe }};
+const maturityLevels = {{ maturity_levels|safe }};
+const maturityColors = ['#dee2e6', '#ffc107', '#0dcaf0', '#198754'];
+if (Object.keys(maturityData).length > 0) {
+    const maturityDatasets = maturityLevels.map((level, i) => ({
+        label: level,
+        data: Object.keys(maturityData).map(sector => maturityData[sector][level] || 0),
+        backgroundColor: maturityColors[i],
+    }));
+    new Chart(document.getElementById('chartMaturity'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(maturityData),
+            datasets: maturityDatasets,
+        },
+        options: {
+            responsive: true,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+// 9. Compétences offres d'emploi
+const skillsData = {{ top_job_skills|safe }};
+new Chart(document.getElementById('chartJobSkills'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(skillsData),
+        datasets: [{
+            label: 'Mentions',
+            data: Object.values(skillsData),
+            backgroundColor: '#6f42c1',
+        }]
+    },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+});
+
+// 10. Compétences communautés
+const communitySkillsData = {{ top_community_skills|safe }};
+if (Object.keys(communitySkillsData).length > 0) {
+    new Chart(document.getElementById('chartCommunitySkills'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(communitySkillsData),
+            datasets: [{
+                label: 'Mentions',
+                data: Object.values(communitySkillsData),
+                backgroundColor: '#0dcaf0',
+            }]
+        },
+        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+    });
+}
+
+// 11. Sources d'offres d'emploi
+const jobSourcesData = {{ job_sources|safe }};
+if (Object.keys(jobSourcesData).length > 0) {
+    new Chart(document.getElementById('chartJobSources'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(jobSourcesData),
+            datasets: [{
+                data: Object.values(jobSourcesData),
+                backgroundColor: COLORS,
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
+    });
+}
+
+// 12. Sources d'actualités
+const newsSourcesData = {{ news_sources|safe }};
+if (Object.keys(newsSourcesData).length > 0) {
+    new Chart(document.getElementById('chartNewsSources'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(newsSourcesData),
+            datasets: [{
+                data: Object.values(newsSourcesData),
+                backgroundColor: COLORS,
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
+    });
+}
+</script>
+{% endblock %}

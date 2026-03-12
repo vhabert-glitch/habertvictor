@@ -1,0 +1,18 @@
+{% comment %}Barre de progression du questionnaire{% endcomment %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between mb-2">
+        {% for s in "1234" %}
+        <div class="text-center flex-fill">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if step|stringformat:'s' >= s %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width:36px;height:36px">
+                {{ s }}
+            </div>
+            <div class="small mt-1 {% if step|stringformat:'s' == s %}fw-bold{% else %}text-muted{% endif %}">
+                {% if s == '1' %}Profil{% elif s == '2' %}Maturité{% elif s == '3' %}Besoins{% else %}Enjeux{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="progress" style="height: 4px;">
+        <div class="progress-bar" style="width: {% widthratio step 4 100 %}%"></div>
+    </div>
+</div>

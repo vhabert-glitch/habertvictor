@@ -1,0 +1,72 @@
+/* IA Formation Radar — Custom styles */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-size: 1.2rem;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Dashboard KPI cards */
+.card.border-primary,
+.card.border-success,
+.card.border-warning,
+.card.border-danger {
+    border-width: 2px;
+}
+
+/* Survey progress */
+.progress {
+    border-radius: 0;
+}
+
+/* Responsive table */
+.table-responsive {
+    border-radius: 0.5rem;
+}
+
+/* Form improvements */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Heatmap tooltip */
+.chart-container {
+    position: relative;
+}
+
+/* Badge styling for sectors */
+.badge {
+    font-weight: 500;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .display-6 {
+        font-size: 1.5rem;
+    }
+
+    .card-body canvas {
+        max-height: 200px;
+    }
+
+    .table {
+        font-size: 0.85rem;
+    }
+}

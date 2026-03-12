@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Réponses — IA Formation Radar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-table"></i> Réponses des entreprises</h2>
+    <a href="{% url 'survey:export_csv' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-download"></i> Export CSV
+    </a>
+</div>
+
+{% if responses %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Entreprise</th>
+                <th>Secteur</th>
+                <th>Taille</th>
+                <th>Localisation</th>
+                <th>Maturité IA</th>
+                <th>Budget</th>
+                <th>Soumis le</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for resp in responses %}
+            <tr>
+                <td class="fw-semibold">{{ resp.company.name }}</td>
+                <td><span class="badge bg-primary">{{ resp.company.get_sector_display }}</span></td>
+                <td>{{ resp.company.get_size_display }}</td>
+                <td>{{ resp.company.location }}</td>
+                <td>{{ resp.get_ai_maturity_display }}</td>
+                <td>{{ resp.get_budget_display }}</td>
+                <td>{{ resp.submitted_at|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Aucune réponse complète pour le moment.
+    <a href="{% url 'survey:create' %}">Remplir le questionnaire</a>
+</div>
+{% endif %}
+{% endblock %}

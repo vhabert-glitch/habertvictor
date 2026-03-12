@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion d'équipe — IA Formation Radar{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-people"></i> Gestion de l'équipe</h2>
+
+<div class="row">
+    <!-- Membres actuels -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Membres de l'équipe</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Depuis</th>
+                            {% if is_admin %}<th></th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                        <tr>
+                            <td>
+                                <i class="bi bi-person-circle"></i>
+                                {{ member.user.email }}
+                                {% if member.user == request.user %}
+                                <span class="badge bg-secondary">Vous</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if member.role == 'admin' %}bg-danger{% else %}bg-info{% endif %}">
+                                    {{ member.get_role_display }}
+                                </span>
+                            </td>
+                            <td>{{ member.joined_at|date:"d/m/Y" }}</td>
+                            {% if is_admin %}
+                            <td>
+                                {% if member.user != request.user %}
+                                <form method="post" action="{% url 'accounts:remove_member' member.user.id %}"
+                                      onsubmit="return confirm('Retirer ce membre ?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if invitations %}
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Invitations en attente</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Envoyée le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in invitations %}
+                        <tr>
+                            <td>{{ inv.email }}</td>
+                            <td>{{ inv.get_role_display }}</td>
+                            <td>{{ inv.created_at|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Inviter un membre -->
+    {% if is_admin %}
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">Inviter un membre</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'accounts:invite' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required
+                               placeholder="collegue@entreprise.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rôle</label>
+                        <select name="role" class="form-select">
+                            <option value="member">Membre (consultation)</option>
+                            <option value="admin">Administrateur</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-send"></i> Envoyer l'invitation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

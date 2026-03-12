@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Merci — Questionnaire{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 text-center">
+        <div class="card shadow-sm">
+            <div class="card-body py-5">
+                <div class="display-1 text-success mb-3"><i class="bi bi-check-circle"></i></div>
+                <h2>Merci pour votre participation !</h2>
+                <p class="lead text-muted mt-3">
+                    Les réponses de <strong>{{ response.company.name }}</strong> ont bien été enregistrées.
+                </p>
+                <p class="text-muted">
+                    Un email de confirmation a été envoyé à <strong>{{ response.company.email }}</strong>.
+                </p>
+
+                <hr class="my-4">
+
+                <p class="text-muted small">
+                    Lien de référence pour cette réponse :<br>
+                    <code>{{ share_url }}</code>
+                </p>
+
+                <div class="mt-4">
+                    <a href="{% url 'core:home' %}" class="btn btn-primary">
+                        Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

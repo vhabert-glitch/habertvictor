@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load survey_tags %}
+
+{% block title %}Besoins en formation — Questionnaire{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        {% include 'survey/_progress.html' with step=3 %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="bi bi-mortarboard"></i> Section 3 : Besoins en formation IA</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'survey:step' token=token step=3 %}">
+                    {% csrf_token %}
+
+                    <p class="text-muted mb-4">
+                        Pour chacun des 10 types de formation, indiquez votre niveau de besoin,
+                        le nombre de personnes à former et l'urgence.
+                    </p>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width:250px">Type de formation</th>
+                                    <th>Niveau de besoin</th>
+                                    <th>Personnes</th>
+                                    <th>Urgence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for code, label in training_types %}
+                                {% with level_name=code|add:"_level" count_name=code|add:"_count" urgency_name=code|add:"_urgency" %}
+                                <tr>
+                                    <td class="fw-semibold">{{ label }}</td>
+                                    <td>{{ form|get_item:level_name }}</td>
+                                    <td>{{ form|get_item:count_name }}</td>
+                                    <td>{{ form|get_item:urgency_name }}</td>
+                                </tr>
+                                {% endwith %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Compétences et préférences</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.priority_skills.label }}</label>
+                        <div class="row">
+                            {% for checkbox in form.priority_skills %}
+                            <div class="col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    {{ checkbox }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.budget.label }}</label>
+                            {{ form.budget }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.preferred_format.label }}</label>
+                            {{ form.preferred_format }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'survey:step' token=token step=2 %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Précédent
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            Suivant <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

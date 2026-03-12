@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Questionnaire — IA Formation Radar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center mb-5">
+            <h1>Questionnaire besoins en formation IA</h1>
+            <p class="lead text-muted">
+                Ce questionnaire nous permet de comprendre vos besoins en formation IA.
+                Il prend environ 10 minutes et se compose de 4 sections.
+            </p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="mb-3">Les 4 sections :</h5>
+                <div class="list-group list-group-flush mb-4">
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-primary rounded-pill me-3">1</span>
+                        <div>
+                            <strong>Profil entreprise</strong>
+                            <div class="text-muted small">Nom, secteur, taille, localisation</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-primary rounded-pill me-3">2</span>
+                        <div>
+                            <strong>Maturité IA</strong>
+                            <div class="text-muted small">Niveau d'adoption, outils, équipes formées</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-primary rounded-pill me-3">3</span>
+                        <div>
+                            <strong>Besoins en formation</strong>
+                            <div class="text-muted small">Types de formations, urgence, budget, compétences</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-primary rounded-pill me-3">4</span>
+                        <div>
+                            <strong>Enjeux critiques</strong>
+                            <div class="text-muted small">Classement des priorités et commentaires</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Vous pouvez sauvegarder et reprendre plus tard. Un lien de reprise vous sera fourni.
+                </div>
+
+                <div class="text-center">
+                    <a href="{% url 'survey:create' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-play-fill"></i> Commencer le questionnaire
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
