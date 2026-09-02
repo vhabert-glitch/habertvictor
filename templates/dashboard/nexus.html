@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Intelligence Marché IA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0a1628;
+  --navy-light: #132038;
+  --navy-mid: #1a2d4d;
+  --teal: #00d4aa;
+  --teal-dim: rgba(0,212,170,0.15);
+  --red: #ff4d6a;
+  --red-dim: rgba(255,77,106,0.12);
+  --amber: #ffb84d;
+  --amber-dim: rgba(255,184,77,0.12);
+  --blue: #4d9fff;
+  --blue-dim: rgba(77,159,255,0.12);
+  --white: #f0f4f8;
+  --grey: #8899aa;
+  --card-bg: rgba(19,32,56,0.7);
+  --border: rgba(255,255,255,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Ambient background */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 20% 50%, rgba(0,212,170,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(77,159,255,0.03) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(255,77,106,0.02) 0%, transparent 50%);
+  z-index: 0;
+  animation: ambientDrift 30s ease-in-out infinite alternate;
+}
+
+@keyframes ambientDrift {
+  0% { transform: translate(0,0) rotate(0deg); }
+  100% { transform: translate(-3%,2%) rotate(2deg); }
+}
+
+/* Layout */
+.app { position: relative; z-index: 1; }
+
+header {
+  padding: 2rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.05em;
+  color: var(--white);
+}
+
+.logo span { color: var(--teal); }
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--teal);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,212,170,0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(0,212,170,0); }
+}
+
+.last-update {
+  font-size: 0.8rem;
+  color: var(--grey);
+}
+
+.refresh-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--teal);
+  background: var(--teal-dim);
+  color: var(--teal);
+  transition: all 0.2s;
+}
+.refresh-btn:hover { background: var(--teal); color: var(--navy); }
+.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.refresh-btn.spinning { animation: spin 1s linear infinite; }
+
+/* Sector tabs */
+.sector-nav {
+  padding: 1.5rem 3rem;
+  display: flex;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sector-tab {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--grey);
+}
+
+.sector-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--white); }
+.sector-tab.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
+
+/* Loading state */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10,22,40,0.8);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.loading-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Main grid */
+.dashboard {
+  padding: 2rem 3rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 1.5rem;
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.card-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--grey);
+  font-weight: 500;
+}
+
+.card-badge {
+  font-size: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.badge-teal { background: var(--teal-dim); color: var(--teal); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-amber { background: var(--amber-dim); color: var(--amber); }
+.badge-blue { background: var(--blue-dim); color: var(--blue); }
+
+/* KPI cards */
+.kpi-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
+
+.kpi-clickable { cursor: pointer; position: relative; }
+.kpi-clickable:hover { border-color: var(--teal); }
+.kpi-clickable.active { border-color: var(--teal); background: rgba(0,212,170,0.08); }
+
+.kpi-hint {
+  font-size: 0.6rem;
+  color: var(--grey);
+  margin-top: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.kpi-clickable:hover .kpi-hint { opacity: 1; }
+
+/* KPI detail panel */
+.kpi-detail-panel {
+  grid-column: 1 / -1;
+  background: var(--card-bg);
+  border: 1px solid var(--teal);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(20px);
+  animation: fadeInUp 0.3s ease forwards;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.kpi-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.kpi-detail-close {
+  background: none;
+  border: none;
+  color: var(--grey);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  line-height: 1;
+}
+.kpi-detail-close:hover { color: var(--white); }
+
+.kpi-detail-body { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border-left: 2px solid var(--teal);
+  transition: background 0.2s;
+}
+.detail-row:hover { background: rgba(255,255,255,0.05); }
+
+.detail-row .detail-title {
+  flex: 1;
+  font-size: 0.8rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.detail-row .detail-title a { color: var(--white); text-decoration: none; }
+.detail-row .detail-title a:hover { color: var(--teal); }
+
+.detail-row .detail-tag {
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  color: var(--grey);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.detail-row .detail-meta {
+  font-size: 0.7rem;
+  color: var(--grey);
+  flex-shrink: 0;
+}
+
+.detail-row .detail-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--blue);
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Expanded skill detail rows */
+.detail-row-expanded {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+
+.detail-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.detail-sub {
+  font-size: 0.7rem;
+  color: var(--grey);
+  padding-left: 0.2rem;
+  line-height: 1.6;
+}
+
+.detail-skill-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  margin: 0 0.15rem;
+}
+
+.detail-formations {
+  color: var(--amber);
+}
+
+.detail-formation-link {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 500;
+}
+a.detail-formation-link:hover { color: var(--teal); }
+
+.kpi-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  color: var(--grey);
+  margin-bottom: 0.75rem;
+}
+
+.kpi-trend {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.trend-up { color: var(--teal); }
+.trend-down { color: var(--red); }
+
+/* Skills chart */
+.skill-bar-container { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.skill-name {
+  font-size: 0.8rem;
+  width: 140px;
+  flex-shrink: 0;
+  color: var(--white);
+}
+
+.skill-bar-bg {
+  flex: 1;
+  height: 24px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+}
+
+.skill-bar-fill::after {
+  content: attr(data-value);
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.bar-teal { background: linear-gradient(90deg, var(--teal), #00e6b8); }
+.bar-blue { background: linear-gradient(90deg, var(--blue), #6bb3ff); }
+.bar-amber { background: linear-gradient(90deg, var(--amber), #ffc966); }
+.bar-red { background: linear-gradient(90deg, var(--red), #ff7088); }
+
+/* Formation list */
+.formation-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.formation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.formation-item:hover { background: rgba(255,255,255,0.04); }
+
+.formation-info { flex: 1; }
+
+.formation-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.formation-org {
+  font-size: 0.7rem;
+  color: var(--grey);
+}
+
+.formation-price {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--teal);
+}
+
+/* Tender list */
+.tender-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.tender-item {
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.tender-item:hover { background: rgba(255,255,255,0.04); }
+
+.tender-title {
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.tender-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--grey);
+}
+
+.tender-deadline { color: var(--amber); font-weight: 500; }
+
+/* Job trends */
+.job-trend-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.job-trend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.job-trend-row:last-child { border-bottom: none; }
+
+.job-title { font-size: 0.82rem; }
+.job-count { font-size: 0.8rem; font-weight: 700; color: var(--blue); }
+.job-growth { font-size: 0.72rem; }
+
+/* Wide / tall cards */
+.card-wide { grid-column: span 2; }
+.card-tall { grid-row: span 2; }
+
+/* Section containers inside grid */
+#section-global, #section-sector {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Sector heatmap */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(3, 1fr);
+  gap: 4px;
+}
+
+.heatmap-header {
+  font-size: 0.7rem;
+  color: var(--grey);
+  text-align: center;
+  padding: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heatmap-label {
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.heatmap-cell {
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.6rem;
+  transition: all 0.3s ease;
+}
+
+.heatmap-cell:hover { transform: scale(1.05); }
+
+.heat-high { background: rgba(0,212,170,0.25); color: var(--teal); }
+.heat-med { background: rgba(255,184,77,0.2); color: var(--amber); }
+.heat-low { background: rgba(255,255,255,0.05); color: var(--grey); }
+.heat-critical { background: rgba(255,77,106,0.2); color: var(--red); }
+
+/* Source tags */
+.source-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.source-tag {
+  font-size: 0.6rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-green { background: rgba(0,212,170,0.15); color: var(--teal); }
+
+/* Compact news list (no summaries, tighter spacing) */
+.edu-news-compact { display: flex; flex-direction: column; gap: 0.4rem; max-height: 380px; overflow-y: auto; }
+
+.edu-news-compact .news-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border-left: 2px solid var(--teal);
+  transition: background 0.2s;
+}
+.edu-news-compact .news-row:hover { background: rgba(255,255,255,0.05); }
+
+.edu-news-compact .news-title {
+  flex: 1;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.edu-news-compact .news-title a { color: var(--white); text-decoration: none; }
+.edu-news-compact .news-title a:hover { color: var(--teal); }
+
+.edu-news-compact .news-source {
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.edu-news-compact .news-date {
+  font-size: 0.65rem;
+  color: var(--grey);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Opportunités Formation ── */
+#section-opportunities {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.gap-bar-container { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.gap-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gap-skill-name {
+  font-size: 0.78rem;
+  width: 130px;
+  flex-shrink: 0;
+  color: var(--white);
+}
+
+.gap-bars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gap-bar-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gap-bar-bg {
+  flex: 1;
+  height: 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gap-bar-fill-demand {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--red), #ff7088);
+}
+
+.gap-bar-fill-supply {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--teal), #00e6b8);
+}
+
+.gap-bar-label {
+  font-size: 0.6rem;
+  color: var(--grey);
+  width: 55px;
+  flex-shrink: 0;
+}
+
+.gap-bar-value {
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.gap-level-badge {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.gap-critical { background: var(--red-dim); color: var(--red); }
+.gap-high { background: var(--amber-dim); color: var(--amber); }
+.gap-medium { background: var(--blue-dim); color: var(--blue); }
+.gap-low { background: rgba(255,255,255,0.06); color: var(--grey); }
+
+/* Recommendations */
+.reco-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.reco-item {
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.reco-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+
+.reco-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.reco-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.reco-priority {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.reco-skills {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+
+.reco-skill-tag {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+.reco-rationale {
+  font-size: 0.7rem;
+  color: var(--grey);
+  line-height: 1.4;
+}
+
+/* Role map */
+.role-map-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.role-map-item {
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.role-map-item:hover { background: rgba(255,255,255,0.04); }
+
+.role-map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.role-map-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.role-map-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.role-map-skills {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.role-map-skill {
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: var(--teal-dim);
+  color: var(--teal);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--grey);
+  font-size: 0.85rem;
+}
+
+/* Footer */
+footer {
+  padding: 2rem 3rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-note {
+  font-size: 0.7rem;
+  color: var(--grey);
+}
+
+.footer-note a { color: var(--teal); text-decoration: none; }
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+.delay-6 { animation-delay: 0.6s; }
+.delay-7 { animation-delay: 0.7s; }
+.delay-8 { animation-delay: 0.8s; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dashboard { grid-template-columns: 1fr 1fr; }
+  #section-global, #section-sector, #section-opportunities { grid-template-columns: 1fr 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .card-wide { grid-column: span 1; }
+}
+
+@media (max-width: 768px) {
+  header { padding: 1.5rem; }
+  .dashboard { grid-template-columns: 1fr; padding: 1.5rem; }
+  #section-global, #section-sector, #section-opportunities { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: 1fr; }
+  .sector-nav { padding: 1rem 1.5rem; flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <header>
+    <div class="logo">NEXUS<span>.</span> Intelligence Marché</div>
+    <div class="header-meta">
+      <div class="pulse-dot" id="pulseDot"></div>
+      <span class="last-update">Dernière actualisation : <span id="updateTime"></span></span>
+      <button class="refresh-btn" id="refreshBtn" title="Actualiser les données">&#x21bb; Actualiser</button>
+    </div>
+  </header>
+
+  <nav class="sector-nav">
+    <button class="sector-tab active" data-sector="all">Vue globale</button>
+    <button class="sector-tab" data-sector="defense">Défense & Aéro</button>
+    <button class="sector-tab" data-sector="energie">Énergie & Nucléaire</button>
+    <button class="sector-tab" data-sector="cyber">Cybersécurité</button>
+    <button class="sector-tab" data-sector="sante">Santé</button>
+    <button class="sector-tab" data-sector="industrie">Industrie</button>
+  </nav>
+
+  <div class="dashboard" id="dashboard">
+    <!-- KPI Row (always visible, clickable) -->
+    <div class="kpi-row animate-in delay-1">
+      <div class="kpi-card kpi-clickable" data-kpi="offres">
+        <div class="kpi-value" style="color: var(--teal);" id="kpi-offres">—</div>
+        <div class="kpi-label">Offres IA actives</div>
+        <div class="kpi-trend trend-up" id="kpi-trend-offres">Chargement...</div>
+        <div class="kpi-hint">Cliquer pour voir le détail</div>
+      </div>
+      <div class="kpi-card kpi-clickable" data-kpi="skills">
+        <div class="kpi-value" style="color: var(--blue);" id="kpi-skills">—</div>
+        <div class="kpi-label">Compétences critiques</div>
+        <div class="kpi-trend trend-up" id="kpi-trend-skills">Chargement...</div>
+        <div class="kpi-hint">Cliquer pour voir le détail</div>
+      </div>
+      <div class="kpi-card kpi-clickable" data-kpi="formations">
+        <div class="kpi-value" style="color: var(--amber);" id="kpi-formations">—</div>
+        <div class="kpi-label">Formations référencées</div>
+        <div class="kpi-trend trend-up" id="kpi-trend-formations">Chargement...</div>
+        <div class="kpi-hint">Cliquer pour voir le détail</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" style="color: var(--red);" id="kpi-gap">—</div>
+        <div class="kpi-label">Déficit compétences IA</div>
+        <div class="kpi-trend trend-down" id="kpi-trend-gap">Chargement...</div>
+      </div>
+    </div>
+
+    <!-- KPI Detail Panel (slides open below KPIs) -->
+    <div class="kpi-detail-panel" id="kpiDetailPanel" style="display:none;">
+      <div class="kpi-detail-header">
+        <div class="card-title" id="kpiDetailTitle"></div>
+        <button class="kpi-detail-close" id="kpiDetailClose">&times;</button>
+      </div>
+      <div class="kpi-detail-body" id="kpiDetailBody">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VUE GÉNÉRALE (visible when sector = all)     -->
+    <!-- ============================================ -->
+    <div id="section-global">
+
+      <!-- Row 1 : Compétences (large) + Postes -->
+      <div class="card card-wide animate-in delay-2">
+        <div class="card-header">
+          <div class="card-title">Compétences IA les plus demandées</div>
+          <span class="card-badge badge-teal">Tous secteurs</span>
+        </div>
+        <div class="skill-bar-container" id="skillBars">
+          <!-- Filled by JS -->
+        </div>
+        <div class="source-row">
+          <span class="source-tag">LinkedIn</span>
+          <span class="source-tag">Indeed</span>
+          <span class="source-tag">APEC</span>
+          <span class="source-tag">WTTJ</span>
+        </div>
+      </div>
+
+      <div class="card animate-in delay-2">
+        <div class="card-header">
+          <div class="card-title">Postes IA les plus recherchés</div>
+          <span class="card-badge badge-blue">Emploi</span>
+        </div>
+        <div class="job-trend-list" id="jobTrends">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Row 2 : Heatmap (large) + Éducation compact -->
+      <div class="card card-wide animate-in delay-3">
+        <div class="card-header">
+          <div class="card-title">Tension compétences × secteurs</div>
+          <span class="card-badge badge-red">Critique</span>
+        </div>
+        <div class="heatmap-grid" id="heatmap">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <div class="card animate-in delay-3">
+        <div class="card-header">
+          <div class="card-title">IA & Éducation</div>
+          <span class="card-badge badge-green">Cette semaine</span>
+        </div>
+        <div class="edu-news-compact" id="educationNewsList">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VUE SECTEUR (visible when sector != all)     -->
+    <!-- ============================================ -->
+    <div id="section-sector" style="display:none;">
+
+      <!-- Row 1 : Compétences (large) + Postes -->
+      <div class="card card-wide animate-in delay-2">
+        <div class="card-header">
+          <div class="card-title">Compétences demandées</div>
+          <span class="card-badge badge-teal">Secteur</span>
+        </div>
+        <div class="skill-bar-container" id="sectorSkillBars">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <div class="card animate-in delay-2">
+        <div class="card-header">
+          <div class="card-title">Postes IA recherchés</div>
+          <span class="card-badge badge-blue">Emploi</span>
+        </div>
+        <div class="job-trend-list" id="sectorJobTrends">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Row 2 : Heatmap + Formations -->
+      <div class="card animate-in delay-3">
+        <div class="card-header">
+          <div class="card-title">Tension par sous-secteur</div>
+          <span class="card-badge badge-red">Critique</span>
+        </div>
+        <div class="heatmap-grid" id="sectorHeatmap">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <div class="card animate-in delay-3">
+        <div class="card-header">
+          <div class="card-title">Formations IA disponibles</div>
+          <span class="card-badge badge-amber">Veille</span>
+        </div>
+        <div class="formation-list" id="formationList">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Row 3 : Appels d'offres + Actus compact -->
+      <div class="card animate-in delay-4">
+        <div class="card-header">
+          <div class="card-title">Appels d'offres publics IA</div>
+          <span class="card-badge badge-blue">Opportunités</span>
+        </div>
+        <div class="tender-list" id="tenderList">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <div class="card animate-in delay-4">
+        <div class="card-header">
+          <div class="card-title">Actualités IA</div>
+          <span class="card-badge badge-blue">Récent</span>
+        </div>
+        <div class="edu-news-compact" id="dailyNewsList">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- OPPORTUNITÉS FORMATION (always visible)      -->
+    <!-- ============================================ -->
+    <div id="section-opportunities">
+
+      <!-- Gap Analysis : Demande vs Offre -->
+      <div class="card card-wide animate-in delay-5">
+        <div class="card-header">
+          <div class="card-title">Demande vs Offre de compétences</div>
+          <span class="card-badge badge-red">Gap Analysis</span>
+        </div>
+        <div class="gap-bar-container" id="gapBars">
+          <div class="empty-state">Chargement...</div>
+        </div>
+      </div>
+
+      <!-- Rôles émergents -->
+      <div class="card animate-in delay-5">
+        <div class="card-header">
+          <div class="card-title">Rôles IA émergents</div>
+          <span class="card-badge badge-blue">Mapping</span>
+        </div>
+        <div class="role-map-list" id="roleMapList">
+          <div class="empty-state">Chargement...</div>
+        </div>
+      </div>
+
+      <!-- Recommandations de cours -->
+      <div class="card animate-in delay-6" style="grid-column: 1 / -1;">
+        <div class="card-header">
+          <div class="card-title">Formations recommandées</div>
+          <span class="card-badge badge-teal">Recommandations</span>
+        </div>
+        <div class="reco-list" id="recoList">
+          <div class="empty-state">Chargement...</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-note">
+      NEXUS Intelligence Marché — Données réelles · Dashboard connecté à l'API ia-formation-radar
+    </div>
+    <div class="footer-note">
+      Sources : APEC, LinkedIn, Indeed, France Compétences, BOAMP, presse spécialisée
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================
+// API-CONNECTED DATA LAYER
+// ============================================
+
+const API_BASE = '/dashboard/api/nexus/';
+let currentSector = 'all';
+let dataCache = {};
+
+async function fetchNexusData(sector) {
+  // Check cache
+  if (dataCache[sector]) {
+    return dataCache[sector];
+  }
+
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('visible');
+
+  try {
+    const resp = await fetch(`${API_BASE}?sector=${sector}`, {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    dataCache[sector] = data;
+    return data;
+  } catch (err) {
+    console.error('Erreur chargement données NEXUS:', err);
+    return null;
+  } finally {
+    overlay.classList.remove('visible');
+  }
+}
+
+// ============================================
+// RENDER FUNCTIONS
+// ============================================
+
+function renderSkillBars(skills, containerId) {
+  const container = document.getElementById(containerId || 'skillBars');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!skills || skills.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune compétence détectée</div>';
+    return;
+  }
+  skills.forEach((skill, i) => {
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    row.innerHTML = `
+      <span class="skill-name">${escapeHtml(skill.name)}</span>
+      <div class="skill-bar-bg">
+        <div class="skill-bar-fill ${skill.color}" data-value="${skill.value}%" style="width: 0%"></div>
+      </div>
+    `;
+    container.appendChild(row);
+    setTimeout(() => {
+      row.querySelector('.skill-bar-fill').style.width = skill.value + '%';
+    }, 100 + i * 80);
+  });
+}
+
+function renderHeatmap(data, containerId) {
+  const container = document.getElementById(containerId || 'heatmap');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!data || !data.rows || data.rows.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune donnée de tension</div>';
+    return;
+  }
+  const cols = data.headers.length;
+  container.style.gridTemplateColumns = `140px repeat(${cols}, 1fr)`;
+  container.innerHTML += '<div class="heatmap-header"></div>';
+  data.headers.forEach(h => {
+    container.innerHTML += `<div class="heatmap-header">${escapeHtml(h)}</div>`;
+  });
+  data.rows.forEach(row => {
+    container.innerHTML += `<div class="heatmap-label">${escapeHtml(row.label)}</div>`;
+    row.cells.forEach(level => {
+      const labels = { critical: 'Critique', high: 'Fort', med: 'Moyen', low: 'Faible' };
+      container.innerHTML += `<div class="heatmap-cell heat-${level}">${labels[level] || level}</div>`;
+    });
+  });
+}
+
+function renderJobs(jobs, containerId) {
+  const container = document.getElementById(containerId || 'jobTrends');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!jobs || jobs.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune donnée d\'emploi</div>';
+    return;
+  }
+  jobs.forEach(j => {
+    container.innerHTML += `
+      <div class="job-trend-row">
+        <span class="job-title">${escapeHtml(j.title)}</span>
+        <span class="job-count">${escapeHtml(j.count)}</span>
+        <span class="job-growth ${j.up ? 'trend-up' : 'trend-down'}">${escapeHtml(j.growth)}</span>
+      </div>
+    `;
+  });
+}
+
+function renderFormations(formations) {
+  const container = document.getElementById('formationList');
+  container.innerHTML = '';
+  if (!formations || formations.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune formation référencée</div>';
+    return;
+  }
+  formations.forEach(f => {
+    container.innerHTML += `
+      <div class="formation-item">
+        <div class="formation-info">
+          <div class="formation-name">${escapeHtml(f.name)}</div>
+          <div class="formation-org">${escapeHtml(f.org)}</div>
+        </div>
+        <div class="formation-price">${escapeHtml(f.price)}</div>
+      </div>
+    `;
+  });
+}
+
+function renderTenders(tenders) {
+  const container = document.getElementById('tenderList');
+  container.innerHTML = '';
+  if (!tenders || tenders.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucun appel d\'offres</div>';
+    return;
+  }
+  tenders.forEach(t => {
+    container.innerHTML += `
+      <div class="tender-item">
+        <div class="tender-title">${escapeHtml(t.title)}</div>
+        <div class="tender-meta">
+          <span>${escapeHtml(t.org)} · ${escapeHtml(t.budget)}</span>
+          <span class="tender-deadline">${t.deadline ? '&#9201; ' + escapeHtml(t.deadline) : ''}</span>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function renderCompactNews(articles, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  if (!articles || articles.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune actualité</div>';
+    return;
+  }
+  articles.forEach(article => {
+    const dateStr = formatRelativeDate(article.date);
+    const titleHtml = article.url
+      ? `<a href="${escapeHtml(article.url)}" target="_blank" rel="noopener" title="${escapeHtml(article.title)}">${escapeHtml(article.title)}</a>`
+      : escapeHtml(article.title);
+    container.innerHTML += `
+      <div class="news-row">
+        <div class="news-title">${titleHtml}</div>
+        <span class="news-source">${escapeHtml(article.source)}</span>
+        <span class="news-date">${escapeHtml(dateStr)}</span>
+      </div>
+    `;
+  });
+}
+
+function renderEducationNews(articles) {
+  renderCompactNews(articles, 'educationNewsList');
+}
+
+function renderDailyNews(articles) {
+  renderCompactNews(articles, 'dailyNewsList');
+}
+
+function formatRelativeDate(isoStr) {
+  if (!isoStr) return '';
+  const date = new Date(isoStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Aujourd'hui";
+  if (diffDays === 1) return 'Hier';
+  return `Il y a ${diffDays} jours`;
+}
+
+function renderKPIs(data) {
+  document.getElementById('kpi-offres').textContent = data.kpis.offres;
+  document.getElementById('kpi-skills').textContent = data.kpis.skills;
+  document.getElementById('kpi-formations').textContent = data.kpis.formations;
+  document.getElementById('kpi-gap').textContent = data.kpis.gap;
+
+  document.getElementById('kpi-trend-offres').textContent = data.kpiTrends.offres;
+  document.getElementById('kpi-trend-skills').textContent = data.kpiTrends.skills;
+  document.getElementById('kpi-trend-formations').textContent = data.kpiTrends.formations;
+  document.getElementById('kpi-trend-gap').textContent = data.kpiTrends.gap;
+}
+
+async function renderDashboard(sector) {
+  const data = await fetchNexusData(sector);
+  if (!data) return;
+
+  const sectionGlobal = document.getElementById('section-global');
+  const sectionSector = document.getElementById('section-sector');
+
+  renderKPIs(data);
+
+  if (sector === 'all') {
+    // Vue Générale
+    sectionGlobal.style.display = 'grid';
+    sectionSector.style.display = 'none';
+    renderSkillBars(data.skills, 'skillBars');
+    renderHeatmap(data.heatmap, 'heatmap');
+    renderJobs(data.jobs, 'jobTrends');
+    renderEducationNews(data.educationNews);
+  } else {
+    // Vue Secteur
+    sectionGlobal.style.display = 'none';
+    sectionSector.style.display = 'grid';
+    renderDailyNews(data.dailyNews);
+    renderSkillBars(data.skills, 'sectorSkillBars');
+    renderHeatmap(data.heatmap, 'sectorHeatmap');
+    renderJobs(data.jobs, 'sectorJobTrends');
+    renderFormations(data.formations);
+    renderTenders(data.tenders);
+  }
+}
+
+// ============================================
+// UTILITY
+// ============================================
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ============================================
+// KPI DETAIL PANELS
+// ============================================
+
+let currentKpiPanel = null;
+
+function openKpiDetail(type) {
+  const panel = document.getElementById('kpiDetailPanel');
+  const title = document.getElementById('kpiDetailTitle');
+  const body = document.getElementById('kpiDetailBody');
+  const data = dataCache[currentSector];
+  if (!data) return;
+
+  // Toggle off if clicking same KPI
+  if (currentKpiPanel === type) {
+    closeKpiDetail();
+    return;
+  }
+
+  // Clear active states
+  document.querySelectorAll('.kpi-clickable').forEach(k => k.classList.remove('active'));
+  document.querySelector(`.kpi-clickable[data-kpi="${type}"]`)?.classList.add('active');
+
+  body.innerHTML = '';
+
+  if (type === 'offres') {
+    title.textContent = `Offres IA actives — Top ${data.topJobsDetail?.length || 0}`;
+    const jobs = data.topJobsDetail || [];
+    if (jobs.length === 0) {
+      body.innerHTML = '<div class="empty-state">Aucune offre disponible</div>';
+    } else {
+      jobs.forEach(job => {
+        const titleHtml = job.url
+          ? `<a href="${escapeHtml(job.url)}" target="_blank" rel="noopener" title="${escapeHtml(job.title)}">${escapeHtml(job.title)}</a>`
+          : escapeHtml(job.title);
+        const skills = (job.skills || []).map(s => escapeHtml(s)).join(', ');
+        body.innerHTML += `
+          <div class="detail-row">
+            <div class="detail-title">${titleHtml}</div>
+            <span class="detail-tag">${escapeHtml(job.source)}</span>
+            ${job.location ? `<span class="detail-meta">${escapeHtml(job.location)}</span>` : ''}
+          </div>
+        `;
+      });
+    }
+  } else if (type === 'skills') {
+    title.textContent = `Compétences critiques — Top ${data.topSkillsDetail?.length || 0}`;
+    const skills = data.topSkillsDetail || [];
+    if (skills.length === 0) {
+      body.innerHTML = '<div class="empty-state">Aucune compétence détectée</div>';
+    } else {
+      skills.forEach(skill => {
+        let relatedHtml = '';
+        if (skill.related && skill.related.length > 0) {
+          relatedHtml = `<div class="detail-sub">Souvent associée à : ${skill.related.map(s => `<span class="detail-skill-tag">${escapeHtml(s)}</span>`).join(' ')}</div>`;
+        }
+        let formationsHtml = '';
+        if (skill.formations && skill.formations.length > 0) {
+          formationsHtml = `<div class="detail-sub detail-formations">Formations : ${skill.formations.map(f => {
+            const name = escapeHtml(f.name);
+            const provider = escapeHtml(f.provider);
+            return f.url
+              ? `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener" class="detail-formation-link">${name}</a> <span class="detail-tag">${provider}</span>`
+              : `<span class="detail-formation-link">${name}</span> <span class="detail-tag">${provider}</span>`;
+          }).join(' · ')}</div>`;
+        }
+        body.innerHTML += `
+          <div class="detail-row detail-row-expanded">
+            <div class="detail-row-main">
+              <div class="detail-title">${escapeHtml(skill.name)}</div>
+              <span class="detail-count">${skill.count} mentions</span>
+            </div>
+            ${relatedHtml}
+            ${formationsHtml}
+          </div>
+        `;
+      });
+    }
+  } else if (type === 'formations') {
+    title.textContent = `Formations IA référencées — Top ${data.topFormationsDetail?.length || 0}`;
+    const formations = data.topFormationsDetail || [];
+    if (formations.length === 0) {
+      body.innerHTML = '<div class="empty-state">Aucune formation référencée</div>';
+    } else {
+      formations.forEach(f => {
+        const titleHtml = f.url
+          ? `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener">${escapeHtml(f.name)}</a>`
+          : escapeHtml(f.name);
+        body.innerHTML += `
+          <div class="detail-row">
+            <div class="detail-title">${titleHtml}</div>
+            <span class="detail-tag">${escapeHtml(f.provider)}</span>
+            ${f.type ? `<span class="detail-tag">${escapeHtml(f.type)}</span>` : ''}
+            ${f.duration ? `<span class="detail-meta">${escapeHtml(f.duration)}</span>` : ''}
+            <span class="detail-count" style="color: var(--teal);">${escapeHtml(f.price)}</span>
+          </div>
+        `;
+      });
+    }
+  }
+
+  panel.style.display = 'block';
+  currentKpiPanel = type;
+}
+
+function closeKpiDetail() {
+  document.getElementById('kpiDetailPanel').style.display = 'none';
+  document.querySelectorAll('.kpi-clickable').forEach(k => k.classList.remove('active'));
+  currentKpiPanel = null;
+}
+
+document.querySelectorAll('.kpi-clickable').forEach(card => {
+  card.addEventListener('click', () => openKpiDetail(card.dataset.kpi));
+});
+document.getElementById('kpiDetailClose').addEventListener('click', closeKpiDetail);
+
+// ============================================
+// SECTOR TABS
+// ============================================
+
+document.querySelectorAll('.sector-tab').forEach(tab => {
+  tab.addEventListener('click', async () => {
+    document.querySelectorAll('.sector-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentSector = tab.dataset.sector;
+    closeKpiDetail();
+    await renderDashboard(currentSector);
+  });
+});
+
+// ============================================
+// NEWS REFRESH
+// ============================================
+
+function updateTimestamp(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  document.getElementById('updateTime').textContent = d.toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+}
+
+async function refreshNews() {
+  const btn = document.getElementById('refreshBtn');
+  const dot = document.getElementById('pulseDot');
+  btn.disabled = true;
+  btn.textContent = '⟳ Scraping en cours...';
+  dot.style.background = 'var(--amber)';
+
+  try {
+    const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    const resp = await fetch('/dashboard/api/nexus/refresh/', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const result = await resp.json();
+    console.log('Refresh result:', result.output);
+
+    // Clear cache and reload
+    dataCache = {};
+    opportunitiesCache = null;
+    await renderDashboard(currentSector);
+    await renderOpportunities();
+    dot.style.background = 'var(--teal)';
+    btn.textContent = '✓ À jour';
+    setTimeout(() => { btn.textContent = '⟳ Actualiser'; }, 3000);
+  } catch (err) {
+    console.error('Refresh error:', err);
+    dot.style.background = 'var(--red)';
+    btn.textContent = '✗ Erreur';
+    setTimeout(() => { btn.textContent = '⟳ Actualiser'; }, 3000);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', refreshNews);
+
+// Auto-check freshness: if data > 24h, auto-refresh on load
+function checkFreshness(lastRefresh) {
+  if (!lastRefresh) return;
+  const age = Date.now() - new Date(lastRefresh).getTime();
+  const hours = age / (1000 * 60 * 60);
+  if (hours > 24) {
+    console.log(`News data is ${Math.round(hours)}h old, auto-refreshing...`);
+    refreshNews();
+  }
+  updateTimestamp(lastRefresh);
+}
+
+// Periodic UI refresh every 5 min (re-fetch from DB, not scrape)
+setInterval(() => {
+  dataCache = {};
+  renderDashboard(currentSector);
+}, 5 * 60 * 1000);
+
+// ============================================
+// OPPORTUNITÉS FORMATION
+// ============================================
+
+let opportunitiesCache = null;
+
+async function fetchOpportunities() {
+  if (opportunitiesCache) return opportunitiesCache;
+  try {
+    const resp = await fetch('/dashboard/api/nexus/opportunities/', {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    opportunitiesCache = await resp.json();
+    return opportunitiesCache;
+  } catch (err) {
+    console.error('Erreur chargement opportunités:', err);
+    return null;
+  }
+}
+
+function renderGapBars(gapAnalysis) {
+  const container = document.getElementById('gapBars');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!gapAnalysis || gapAnalysis.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune donnée de gap</div>';
+    return;
+  }
+  // Find max value for normalization
+  const maxVal = Math.max(...gapAnalysis.map(g => Math.max(g.demand, g.supply)), 1);
+
+  gapAnalysis.forEach(gap => {
+    const demandWidth = Math.max((gap.demand / maxVal) * 100, 2);
+    const supplyWidth = Math.max((gap.supply / maxVal) * 100, 2);
+    const levelClass = `gap-${gap.gap_level}`;
+    const levelLabels = { critical: 'Critique', high: 'Fort', medium: 'Moyen', low: 'Faible' };
+
+    container.innerHTML += `
+      <div class="gap-row">
+        <span class="gap-skill-name">${escapeHtml(gap.skill)}</span>
+        <div class="gap-bars">
+          <div class="gap-bar-line">
+            <span class="gap-bar-label" style="color: var(--red);">Demande</span>
+            <div class="gap-bar-bg"><div class="gap-bar-fill-demand" style="width:${demandWidth}%"></div></div>
+            <span class="gap-bar-value" style="color: var(--red);">${gap.demand}</span>
+          </div>
+          <div class="gap-bar-line">
+            <span class="gap-bar-label" style="color: var(--teal);">Offre</span>
+            <div class="gap-bar-bg"><div class="gap-bar-fill-supply" style="width:${supplyWidth}%"></div></div>
+            <span class="gap-bar-value" style="color: var(--teal);">${gap.supply}</span>
+          </div>
+        </div>
+        <span class="gap-level-badge ${levelClass}">${levelLabels[gap.gap_level] || gap.gap_level}</span>
+      </div>
+    `;
+  });
+}
+
+function renderRoleMap(roleMap) {
+  const container = document.getElementById('roleMapList');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!roleMap || roleMap.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucun rôle émergent détecté</div>';
+    return;
+  }
+  roleMap.forEach(role => {
+    const skillsHtml = (role.skills || []).map(s =>
+      `<span class="role-map-skill">${escapeHtml(s.name)}</span>`
+    ).join('');
+    container.innerHTML += `
+      <div class="role-map-item">
+        <div class="role-map-header">
+          <span class="role-map-title">${escapeHtml(role.role)}</span>
+          <span class="role-map-count">${role.job_count} offre${role.job_count > 1 ? 's' : ''}</span>
+        </div>
+        <div class="role-map-skills">${skillsHtml}</div>
+      </div>
+    `;
+  });
+}
+
+function renderRecommendations(recommendations) {
+  const container = document.getElementById('recoList');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!recommendations || recommendations.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune recommandation disponible</div>';
+    return;
+  }
+  recommendations.forEach(reco => {
+    const priorityClass = reco.priority === 'critical' ? 'gap-critical'
+      : reco.priority === 'high' ? 'gap-high' : 'gap-medium';
+    const priorityLabel = reco.priority === 'critical' ? 'Critique'
+      : reco.priority === 'high' ? 'Prioritaire' : 'Recommandé';
+    const skillsHtml = (reco.skills || []).map(s =>
+      `<span class="reco-skill-tag">${escapeHtml(s)}</span>`
+    ).join('');
+    container.innerHTML += `
+      <div class="reco-item">
+        <div class="reco-header">
+          <span class="reco-title">${escapeHtml(reco.title)}</span>
+          <span class="reco-priority ${priorityClass}">${priorityLabel}</span>
+        </div>
+        <div class="reco-skills">${skillsHtml}</div>
+        <div class="reco-rationale">${escapeHtml(reco.rationale)}</div>
+      </div>
+    `;
+  });
+}
+
+async function renderOpportunities() {
+  const data = await fetchOpportunities();
+  if (!data) return;
+  renderGapBars(data.gap_analysis);
+  renderRoleMap(data.role_map);
+  renderRecommendations(data.recommendations);
+}
+
+// ============================================
+// INIT
+// ============================================
+
+updateTimestamp();
+
+// Initial render + freshness check + opportunities
+(async () => {
+  await renderDashboard('all');
+  // Check data freshness after first load
+  const data = dataCache['all'];
+  if (data && data.lastRefresh) {
+    checkFreshness(data.lastRefresh);
+  }
+  // Load opportunities section
+  await renderOpportunities();
+})();
+</script>
+</body>
+</html>

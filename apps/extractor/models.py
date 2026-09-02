@@ -164,3 +164,72 @@ class AIReport(models.Model):
 
     def __str__(self):
         return f"[{self.get_report_type_display()}] {self.title}"
+
+
+class PublicTender(models.Model):
+    """Appels d'offres publics IA (BOAMP, marchés publics)."""
+    title = models.CharField('Titre', max_length=500)
+    org = models.CharField('Organisme', max_length=300)
+    description = models.TextField('Description', blank=True)
+    budget = models.CharField('Budget', max_length=100, blank=True)
+    deadline = models.DateField('Date limite', null=True, blank=True)
+    sector = models.CharField('Secteur', max_length=50, choices=SECTORS, blank=True)
+    url = models.URLField('Lien', max_length=1000, blank=True)
+    source = models.CharField('Source', max_length=100, default='BOAMP')
+    extracted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Appel d\'offres public'
+        verbose_name_plural = 'Appels d\'offres publics'
+        ordering = ['deadline']
+
+    def __str__(self):
+        return f"{self.title} ({self.org})"
+
+
+class FormationCatalog(models.Model):
+    """Formations IA existantes sur le marché français."""
+    FORMAT_CHOICES = [
+        ('presentiel', 'Présentiel'),
+        ('distanciel', 'Distanciel'),
+        ('hybride', 'Hybride'),
+        ('elearning', 'E-learning'),
+    ]
+    TRAINING_TYPE_CHOICES = [
+        ('executive', 'Executive Certificate'),
+        ('diplome', 'Diplôme / Master'),
+        ('certification', 'Certification'),
+        ('courte', 'Formation courte'),
+        ('mooc', 'MOOC / En ligne'),
+        ('interne', 'Formation interne'),
+    ]
+
+    name = models.CharField('Nom', max_length=500)
+    provider = models.CharField('Organisme', max_length=300)
+    sector = models.CharField('Secteur', max_length=50, choices=SECTORS, blank=True)
+    training_type = models.CharField(
+        'Type', max_length=20, choices=TRAINING_TYPE_CHOICES, blank=True
+    )
+    url = models.URLField('Lien', max_length=1000, blank=True)
+    price = models.CharField('Prix', max_length=100, blank=True)
+    format = models.CharField('Format', max_length=20, choices=FORMAT_CHOICES, blank=True)
+    duration = models.CharField('Durée', max_length=100, blank=True)
+    description = models.TextField('Description', blank=True)
+    skills_covered = models.JSONField('Compétences couvertes', default=list, blank=True)
+    extracted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Formation IA'
+        verbose_name_plural = 'Formations IA'
+        ordering = ['-extracted_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.provider})"
+
+    def save(self, *args, **kwargs):
+        # Auto-fill skills_covered from name + description if empty
+        if not self.skills_covered:
+            from apps.extractor.classifier import extract_skills
+            text = f"{self.name} {self.description}"
+            self.skills_covered = extract_skills(text)
+        super().save(*args, **kwargs)

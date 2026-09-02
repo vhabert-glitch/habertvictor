@@ -12,6 +12,7 @@ SECTORS = [
     ('energie', 'Énergie & Environnement'),
     ('transport', 'Transport & Logistique'),
     ('administration', 'Administration publique'),
+    ('cyberdefense', 'Cyberdéfense & Défense'),
     ('autre', 'Autre'),
 ]
 
@@ -26,6 +27,7 @@ TRAINING_TYPES = [
     ('deploiement_mlops', 'Déploiement & MLOps'),
     ('ia_metier', 'IA appliquée au métier (use cases sectoriels)'),
     ('management_ia', 'Management de projets IA & transformation'),
+    ('innovation_digital', 'Innovation digitale & rôles IA émergents'),
 ]
 
 CRITICAL_ISSUES = [
@@ -104,4 +106,15 @@ AI_SKILLS = [
     ('data_engineering', 'Data Engineering'),
     ('ai_ethics', 'Éthique de l\'IA'),
     ('ai_strategy', 'Stratégie IA'),
+    ('rag', 'RAG (Retrieval Augmented Generation)'),
+    ('langchain', 'LangChain & Frameworks agents'),
+    ('fine_tuning', 'Fine-tuning & RLHF'),
+    ('prompt_engineering', 'Prompt Engineering'),
+    ('ai_governance', 'AI Governance & Conformité'),
+    ('ai_safety', 'AI Safety & Alignement'),
+    ('hugging_face', 'Hugging Face & Transformers'),
+    ('vector_db', 'Vector Databases'),
+    ('ai_agents', 'AI Agents & Systèmes autonomes'),
+    ('kubernetes', 'Kubernetes & Orchestration'),
+    ('terraform', 'Terraform & IaC'),
 ]

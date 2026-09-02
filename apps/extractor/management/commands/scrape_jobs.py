@@ -25,6 +25,7 @@ HEADERS = {
 }
 
 SEARCH_QUERIES = [
+    # ── IA core ──
     'intelligence artificielle',
     'machine learning',
     'data scientist',
@@ -35,6 +36,53 @@ SEARCH_QUERIES = [
     'data engineer',
     'computer vision',
     'prompt engineer',
+    # ── Innovation & rôles hybrides IA ──
+    'directeur innovation intelligence artificielle',
+    'responsable innovation digitale',
+    'chief digital officer',
+    'chief data officer',
+    'transformation digitale IA',
+    'innovation manager data',
+    'responsable R&D intelligence artificielle',
+    'head of AI',
+    'VP innovation',
+    'digital transformation officer',
+    # ── Cybersécurité ──
+    'cybersécurité IA',
+    'cyberdéfense intelligence artificielle',
+    'analyste SOC IA',
+    'threat intelligence machine learning',
+    # ── Énergie ──
+    'nucléaire intelligence artificielle',
+    'énergie machine learning',
+    'maintenance prédictive énergie',
+    'smart grid IA',
+    'data scientist énergie nucléaire',
+    # ── Santé ──
+    'IA santé',
+    'machine learning santé médical',
+    'data scientist pharma',
+    'imagerie médicale intelligence artificielle',
+    'NLP santé dossier médical',
+    # ── Industrie ──
+    'IA industrie manufacturing',
+    'robotique intelligence artificielle',
+    'maintenance prédictive usine',
+    'digital twin jumeau numérique',
+    'supply chain machine learning',
+    # ── Rôles émergents IA ──
+    'chief ai officer',
+    'ai product manager',
+    'ai ethics officer',
+    'context engineer',
+    'ai solution architect',
+    'ai reliability engineer',
+    'ingénieur RAG retrieval augmented generation',
+    'responsable IA générative',
+    'AI governance manager',
+    'prompt engineer senior',
+    'AI agents developer',
+    'vector database engineer',
 ]
 
 
@@ -60,6 +108,7 @@ class Command(BaseCommand):
             'wttj': self._scrape_wttj,
             'francetravail': self._scrape_france_travail,
             'hellowork': self._scrape_hellowork,
+            'linkedin': self._scrape_linkedin,
         }
 
         if source == 'all':
@@ -109,7 +158,7 @@ class Command(BaseCommand):
             return 0
 
         count = 0
-        for query in SEARCH_QUERIES[:5]:
+        for query in SEARCH_QUERIES[:12]:
             try:
                 url = (
                     f"https://api.adzuna.com/v1/api/jobs/fr/search/1"
@@ -134,7 +183,7 @@ class Command(BaseCommand):
 
     def _scrape_apec(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:5]:
+        for query in SEARCH_QUERIES[:12]:
             try:
                 url = f"https://www.apec.fr/candidat/recherche-emploi.html/emploi?motsCles={quote_plus(query)}"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -164,7 +213,7 @@ class Command(BaseCommand):
 
     def _scrape_indeed(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:6]:
+        for query in SEARCH_QUERIES[:12]:
             try:
                 url = f"https://fr.indeed.com/jobs?q={quote_plus(query)}&l=France&limit={limit}"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -212,7 +261,7 @@ class Command(BaseCommand):
 
     def _scrape_wttj(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:5]:
+        for query in SEARCH_QUERIES[:12]:
             try:
                 # WTTJ a une API publique pour la recherche
                 api_url = (
@@ -304,7 +353,7 @@ class Command(BaseCommand):
             token = token_resp.json()['access_token']
 
             # 2. Rechercher des offres
-            for query in SEARCH_QUERIES[:6]:
+            for query in SEARCH_QUERIES[:12]:
                 try:
                     search_resp = requests.get(
                         'https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search',
@@ -366,7 +415,7 @@ class Command(BaseCommand):
 
     def _scrape_hellowork(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:5]:
+        for query in SEARCH_QUERIES[:12]:
             try:
                 url = f"https://www.hellowork.com/fr-fr/emploi/recherche.html?k={quote_plus(query)}&l=France"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -393,6 +442,57 @@ class Command(BaseCommand):
                 logger.error(f"HelloWork '{query}': {e}")
         return count
 
+    # ─── LINKEDIN (public, no login required) ───────────────────────────
+
+    def _scrape_linkedin(self, limit):
+        count = 0
+        for query in SEARCH_QUERIES:
+            try:
+                url = (
+                    f"https://www.linkedin.com/jobs/search/"
+                    f"?keywords={quote_plus(query)}&location=France"
+                    f"&f_TPR=r604800&position=1&pageNum=0"
+                )
+                resp = requests.get(url, headers=HEADERS, timeout=15)
+                if resp.status_code != 200:
+                    self.stdout.write(self.style.WARNING(
+                        f"  LinkedIn '{query}': HTTP {resp.status_code}"
+                    ))
+                    continue
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                cards = soup.select(
+                    '.base-card, .job-search-card, [data-entity-urn]'
+                )[:limit]
+                for card in cards:
+                    title_el = card.select_one(
+                        '.base-search-card__title, h3'
+                    )
+                    if not title_el:
+                        continue
+                    title = title_el.get_text(strip=True)
+                    link = card.select_one(
+                        'a.base-card__full-link, a[href*="/jobs/view"]'
+                    )
+                    href = ''
+                    if link and link.get('href'):
+                        href = link['href'].split('?')[0]
+                    loc_el = card.select_one('.job-search-card__location')
+                    location = loc_el.get_text(strip=True) if loc_el else ''
+                    company_el = card.select_one(
+                        '.base-search-card__subtitle, h4'
+                    )
+                    company = company_el.get_text(strip=True) if company_el else ''
+                    desc = f"{title} - {company}" if company else title
+                    count += self._save_job(
+                        title, 'LinkedIn', href, desc, location
+                    )
+                self.stdout.write(
+                    f"  LinkedIn '{query}': {len(cards)} trouvées"
+                )
+            except Exception as e:
+                logger.error(f"LinkedIn '{query}': {e}")
+        return count
+
     # ─── DONNÉES D'EXEMPLE ───────────────────────────────────────────────
 
     def _generate_sample_jobs(self):
@@ -403,6 +503,11 @@ class Command(BaseCommand):
             ('MLOps Engineer - Cloud', 'retail', ['MLOps', 'Docker', 'Cloud ML'], 'Bordeaux', 'deploiement_mlops'),
             ('Responsable Conformité IA - AI Act', 'finance', ['AI Ethics'], 'Paris', 'ia_reglementaire'),
             ('Data Engineer IA - Pipeline', 'energie', ['Python', 'Spark', 'Data Engineering'], 'Nantes', 'data_science'),
+            ('Ingénieur IA Maintenance Prédictive - Nucléaire', 'energie', ['Python', 'TensorFlow', 'Deep Learning'], 'Saclay', 'fondamentaux_ia'),
+            ('Data Scientist - Optimisation Réseau Électrique', 'energie', ['Python', 'Scikit-learn', 'SQL'], 'Lyon', 'data_science'),
+            ('Chef de projet IA - Transition Énergétique', 'energie', ['AI Strategy', 'Cloud ML'], 'Paris', 'management_ia'),
+            ('Ingénieur ML - Sûreté Nucléaire & Jumeaux Numériques', 'energie', ['Python', 'PyTorch', 'Deep Learning'], 'Cadarache', 'fondamentaux_ia'),
+            ('Analyste IA - Smart Grid & Réseaux Intelligents', 'energie', ['Python', 'Data Engineering', 'SQL'], 'Grenoble', 'ia_decisionnelle'),
             ('Ingénieur Computer Vision - Auto', 'transport', ['Python', 'Computer Vision', 'PyTorch'], 'Toulouse', 'computer_vision'),
             ('Prompt Engineer - IA Générative', 'education', ['LLM', 'NLP'], 'Paris', 'nlp'),
             ('Analyste IA décisionnelle', 'administration', ['SQL', 'Data Visualization'], 'Lille', 'ia_decisionnelle'),
