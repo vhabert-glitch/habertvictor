@@ -126,14 +126,21 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'\nTotal : {total} offres traitées.'))
 
-    def _save_job(self, title, source, url, description='', location=''):
-        """Sauvegarde une offre avec classification automatique."""
+    def _save_job(self, title, source, url, description='', location='', company=''):
+        """Sauvegarde une offre avec classification automatique.
+
+        `description` doit être le texte réel de l'annonce, ou rester vide.
+        Ne jamais y recopier le titre ou le nom de l'entreprise : le classifieur
+        y cherche des mots-clés métier, et un faux texte gonfle `relevance_score`
+        tout en laissant croire que l'annonce a été lue.
+        """
         full_text = f"{title} {description}"
         try:
             _, created = JobPosting.objects.update_or_create(
                 url=url if url else f"no-url-{source}-{title[:50]}",
                 defaults={
                     'title': title[:500],
+                    'company': (company or '')[:300],
                     'source': source,
                     'sector': classify_sector(full_text),
                     'skills': extract_skills(full_text),
@@ -172,7 +179,8 @@ class Command(BaseCommand):
                         r.get('title', ''), 'Adzuna',
                         r.get('redirect_url', ''),
                         r.get('description', ''),
-                        r.get('location', {}).get('display_name', '')
+                        r.get('location', {}).get('display_name', ''),
+                        company=(r.get('company') or {}).get('display_name', ''),
                     )
                 self.stdout.write(f"  Adzuna '{query}': OK")
             except Exception as e:
@@ -250,7 +258,11 @@ class Command(BaseCommand):
                     snippet_el = card.select_one('.job-snippet, [class*="snippet"]')
                     snippet = snippet_el.get_text(strip=True) if snippet_el else ''
 
-                    count += self._save_job(title, 'Indeed', href, snippet, location)
+                    company_el = card.select_one('[data-testid="company-name"], .companyName')
+                    company = company_el.get_text(strip=True) if company_el else ''
+
+                    count += self._save_job(title, 'Indeed', href, snippet, location,
+                                            company=company)
 
                 self.stdout.write(f"  Indeed '{query}': {len(job_cards)} trouvées")
             except Exception as e:
@@ -302,8 +314,10 @@ class Command(BaseCommand):
                         org_slug = job.get('organization', {}).get('slug', '')
                         href = f"https://www.welcometothejungle.com/fr/companies/{org_slug}/jobs/{slug}" if slug else ''
                         desc = job.get('description', job.get('profile', ''))
-                        city = job.get('office', {}).get('city', '')
-                        count += self._save_job(title, 'WTTJ', href, desc, city)
+                        city = (job.get('office') or {}).get('city', '')
+                        company = (job.get('organization') or {}).get('name', '')
+                        count += self._save_job(title, 'WTTJ', href, desc, city,
+                                                company=company)
 
                 self.stdout.write(f"  WTTJ '{query}': OK")
             except Exception as e:
@@ -370,9 +384,11 @@ class Command(BaseCommand):
                     for offre in data.get('resultats', []):
                         title = offre.get('intitule', '')
                         desc = offre.get('description', '')
-                        location = offre.get('lieuTravail', {}).get('libelle', '')
+                        location = (offre.get('lieuTravail') or {}).get('libelle', '')
+                        company = (offre.get('entreprise') or {}).get('nom', '')
                         url = f"https://candidat.francetravail.fr/offres/recherche/detail/{offre.get('id', '')}"
-                        count += self._save_job(title, 'France Travail', url, desc, location)
+                        count += self._save_job(title, 'France Travail', url, desc,
+                                                location, company=company)
                     self.stdout.write(f"  France Travail API '{query}': OK")
                 except Exception as e:
                     logger.error(f"France Travail API '{query}': {e}")
@@ -482,9 +498,11 @@ class Command(BaseCommand):
                         '.base-search-card__subtitle, h4'
                     )
                     company = company_el.get_text(strip=True) if company_el else ''
-                    desc = f"{title} - {company}" if company else title
+                    # La page de résultats LinkedIn ne contient pas le texte de
+                    # l'annonce : on laisse la description vide plutôt que d'y
+                    # recopier titre + entreprise (voir _save_job).
                     count += self._save_job(
-                        title, 'LinkedIn', href, desc, location
+                        title, 'LinkedIn', href, '', location, company=company
                     )
                 self.stdout.write(
                     f"  LinkedIn '{query}': {len(cards)} trouvées"

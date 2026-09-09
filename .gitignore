@@ -7,3 +7,8 @@ staticfiles/
 dist/
 venv/
 .venv/
+logs/
+
+
+# Espace de travail de l'agent : rapports et synthèses, contenu privé
+Agent/

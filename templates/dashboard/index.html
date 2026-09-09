@@ -88,17 +88,25 @@
 <div class="row g-3 mb-4">
     <div class="col-lg-6">
         <div class="card h-100">
-            <div class="card-header bg-white fw-semibold">Besoins par secteur</div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Besoins en formation par secteur d'activité</span>
+                <span class="badge bg-light text-muted" title="Nombre d'entreprises ayant exprimé au moins un besoin de formation IA, par secteur">?</span>
+            </div>
             <div class="card-body">
-                <canvas id="chartSector" height="250"></canvas>
+                <p class="text-muted small mb-2">Combien d'entreprises par secteur ont exprimé un besoin de formation IA ?</p>
+                <canvas id="chartSector" height="240"></canvas>
             </div>
         </div>
     </div>
     <div class="col-lg-6">
         <div class="card h-100">
-            <div class="card-header bg-white fw-semibold">Top formations demandées</div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Types de formations les plus demandées</span>
+                <span class="badge bg-light text-muted" title="Classement des formations par nombre de demandes (tous secteurs confondus)">?</span>
+            </div>
             <div class="card-body">
-                <canvas id="chartTopTrainings" height="250"></canvas>
+                <p class="text-muted small mb-2">Quelles compétences IA sont les plus recherchées par les entreprises ?</p>
+                <canvas id="chartTopTrainings" height="240"></canvas>
             </div>
         </div>
     </div>
@@ -108,9 +116,9 @@
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
         <div class="card h-100">
-            <div class="card-header bg-white fw-semibold">Carte de chaleur : Secteur x Formation</div>
-            <div class="card-body">
-                <canvas id="chartHeatmap" height="300"></canvas>
+            <div class="card-header bg-white fw-semibold">Quelle formation pour quel secteur ? <small class="text-muted fw-normal">— Plus la case est foncée, plus le besoin est fort</small></div>
+            <div class="card-body p-2" style="overflow-x:auto">
+                <div id="heatmapContainer"></div>
             </div>
         </div>
     </div>
@@ -152,13 +160,13 @@
     </div>
 </div>
 
-<!-- Graphique maturité -->
+<!-- Matrice maturité IA -->
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-header bg-white fw-semibold">Maturité IA par secteur</div>
-            <div class="card-body">
-                <canvas id="chartMaturity" height="250"></canvas>
+            <div class="card-body p-2">
+                <div id="maturityMatrix"></div>
             </div>
         </div>
     </div>
@@ -392,6 +400,15 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
+// Palettes distinctes par graphique
+const SECTOR_COLORS = [
+    '#1B4965', '#2A6F97', '#468FAF', '#61A5C2', '#89C2D9',
+    '#A9D6E5', '#5E548E', '#9F86C0', '#BE95C4', '#E0B1CB'
+];
+const TRAINING_COLORS = [
+    '#D62828', '#F77F00', '#FCBF49', '#EAE2B7', '#003049',
+    '#669BBC', '#A8DADC', '#457B9D', '#1D3557', '#E63946'
+];
 const COLORS = [
     '#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0',
     '#6f42c1', '#fd7e14', '#20c997', '#6610f2', '#d63384'
@@ -406,13 +423,15 @@ new Chart(document.getElementById('chartSector'), {
         datasets: [{
             label: 'Nombre de besoins exprimés',
             data: Object.values(sectorData),
-            backgroundColor: COLORS.slice(0, Object.keys(sectorData).length),
+            backgroundColor: SECTOR_COLORS.slice(0, Object.keys(sectorData).length),
+            borderColor: SECTOR_COLORS.slice(0, Object.keys(sectorData).length).map(c => c),
+            borderWidth: 1,
         }]
     },
     options: { responsive: true, plugins: { legend: { display: false } } }
 });
 
-// 2. Top formations
+// 2. Top formations (couleur unique pour éviter confusion avec les secteurs)
 const trainingData = {{ top_trainings|safe }};
 new Chart(document.getElementById('chartTopTrainings'), {
     type: 'bar',
@@ -421,33 +440,67 @@ new Chart(document.getElementById('chartTopTrainings'), {
         datasets: [{
             label: 'Demandes',
             data: Object.values(trainingData),
-            backgroundColor: COLORS.slice(0, Object.keys(trainingData).length),
+            backgroundColor: '#E63946',
+            borderColor: '#C1121F',
+            borderWidth: 1,
         }]
     },
     options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
 });
 
-// 3. Heatmap (simulated as stacked bar)
+// 3. Heatmap — vraie carte de chaleur en tableau HTML
 const heatmapData = {{ heatmap_data|safe }};
 const heatmapLabels = {{ heatmap_training_labels|safe }};
 if (heatmapData.length > 0) {
-    const heatmapDatasets = heatmapLabels.map((label, i) => ({
-        label: label,
-        data: heatmapData.map(row => row.values[i]),
-        backgroundColor: COLORS[i % COLORS.length],
-    }));
-    new Chart(document.getElementById('chartHeatmap'), {
-        type: 'bar',
-        data: {
-            labels: heatmapData.map(row => row.sector),
-            datasets: heatmapDatasets,
-        },
-        options: {
-            responsive: true,
-            scales: { x: { stacked: true }, y: { stacked: true } },
-            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } }
-        }
+    // Trouver la valeur max pour normaliser les couleurs
+    let heatMax = 0;
+    heatmapData.forEach(row => row.values.forEach(v => { if (v > heatMax) heatMax = v; }));
+    if (heatMax === 0) heatMax = 1;
+
+    // Fonction couleur : du blanc (0) au bleu foncé (max)
+    function heatColor(val) {
+        const intensity = val / heatMax;
+        const r = Math.round(255 - intensity * (255 - 13));   // 255 → 13
+        const g = Math.round(255 - intensity * (255 - 71));   // 255 → 71
+        const b = Math.round(255 - intensity * (255 - 161));  // 255 → 161
+        return `rgb(${r},${g},${b})`;
+    }
+    function textColor(val) {
+        return (val / heatMax) > 0.5 ? '#fff' : '#333';
+    }
+
+    // Abréger les noms de formations pour le header
+    const shortLabels = heatmapLabels.map(l => {
+        if (l.length > 18) return l.substring(0, 16) + '…';
+        return l;
     });
+
+    let html = '<table class="table table-sm table-bordered mb-0" style="font-size:0.72rem;white-space:nowrap">';
+    html += '<thead><tr><th style="position:sticky;left:0;background:#fff;z-index:1"></th>';
+    shortLabels.forEach((label, i) => {
+        html += `<th class="text-center px-1" style="writing-mode:vertical-lr;transform:rotate(180deg);max-width:30px;height:120px" title="${heatmapLabels[i]}">${label}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+    heatmapData.forEach(row => {
+        html += `<tr><td class="fw-semibold" style="position:sticky;left:0;background:#fff;z-index:1">${row.sector}</td>`;
+        row.values.forEach(val => {
+            const bg = heatColor(val);
+            const fg = textColor(val);
+            html += `<td class="text-center" style="background:${bg};color:${fg};font-weight:600;min-width:32px">${val}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+
+    // Légende
+    html += '<div class="d-flex align-items-center gap-2 mt-2" style="font-size:0.75rem">';
+    html += '<span class="text-muted">Intensité :</span>';
+    html += '<span style="display:inline-block;width:20px;height:14px;background:#fff;border:1px solid #dee2e6"></span><span>0</span>';
+    html += '<span style="display:inline-block;width:60px;height:14px;background:linear-gradient(to right,#fff,#0d47a1);border:1px solid #dee2e6"></span>';
+    html += `<span>${heatMax}</span>`;
+    html += '</div>';
+
+    document.getElementById('heatmapContainer').innerHTML = html;
 }
 
 // 4. Timeline
@@ -510,28 +563,80 @@ new Chart(document.getElementById('chartBudget'), {
     options: { responsive: true, plugins: { legend: { display: false } } }
 });
 
-// 8. Maturité par secteur (stacked bar)
+// 8. Maturité par secteur — matrice HTML explicite
 const maturityData = {{ maturity_by_sector|safe }};
 const maturityLevels = {{ maturity_levels|safe }};
-const maturityColors = ['#dee2e6', '#ffc107', '#0dcaf0', '#198754'];
+const maturityMeta = [
+    { color: '#e53935', bg: '#ffebee', icon: '○', label: 'Aucun projet IA', desc: 'L\'entreprise n\'a pas encore de projet lié à l\'intelligence artificielle' },
+    { color: '#FB8C00', bg: '#FFF3E0', icon: '◔', label: 'En phase d\'étude', desc: 'L\'entreprise étudie les possibilités de l\'IA, sans projet concret' },
+    { color: '#039BE5', bg: '#E1F5FE', icon: '◑', label: 'Tests en cours', desc: 'L\'entreprise mène des projets pilotes ou des expérimentations IA' },
+    { color: '#2E7D32', bg: '#E8F5E9', icon: '●', label: 'IA en production', desc: 'L\'entreprise utilise l\'IA au quotidien dans ses processus métier' },
+];
 if (Object.keys(maturityData).length > 0) {
-    const maturityDatasets = maturityLevels.map((level, i) => ({
-        label: level,
-        data: Object.keys(maturityData).map(sector => maturityData[sector][level] || 0),
-        backgroundColor: maturityColors[i],
-    }));
-    new Chart(document.getElementById('chartMaturity'), {
-        type: 'bar',
-        data: {
-            labels: Object.keys(maturityData),
-            datasets: maturityDatasets,
-        },
-        options: {
-            responsive: true,
-            scales: { x: { stacked: true }, y: { stacked: true } },
-            plugins: { legend: { position: 'bottom' } }
-        }
+    const sectors = Object.keys(maturityData);
+
+    // Explication en haut
+    let html = '<p class="text-muted small mb-3">Où en sont les entreprises de chaque secteur dans leur adoption de l\'IA ? Basé sur les réponses au questionnaire.</p>';
+
+    html += '<table class="table table-sm table-hover mb-2" style="font-size:0.85rem">';
+    html += '<thead class="table-light"><tr><th style="min-width:150px">Secteur</th>';
+    maturityMeta.forEach(m => {
+        html += `<th class="text-center px-2" style="min-width:80px"><span style="color:${m.color};font-size:1.2rem">${m.icon}</span><br><small class="fw-semibold">${m.label}</small></th>`;
     });
+    html += '<th style="min-width:180px">Niveau global</th></tr></thead><tbody>';
+
+    sectors.forEach(sector => {
+        const row = maturityData[sector];
+        const total = maturityLevels.reduce((sum, l) => sum + (row[l] || 0), 0);
+
+        // Score moyen (0-3) pour déterminer le niveau global
+        const weights = [0, 1, 2, 3];
+        let weightedSum = 0;
+        maturityLevels.forEach((level, i) => { weightedSum += (row[level] || 0) * weights[i]; });
+        const avgScore = total > 0 ? weightedSum / total : 0;
+        const globalLevel = avgScore < 0.75 ? 0 : avgScore < 1.5 ? 1 : avgScore < 2.25 ? 2 : 3;
+
+        html += `<tr><td class="fw-semibold">${sector}</td>`;
+        maturityLevels.forEach((level, i) => {
+            const val = row[level] || 0;
+            const cellBg = val > 0 ? maturityMeta[i].bg : '';
+            const pct = total > 0 ? Math.round(val / total * 100) : 0;
+            html += `<td class="text-center" style="background:${cellBg}" title="${maturityMeta[i].desc}">`;
+            if (val > 0) {
+                html += `<strong style="color:${maturityMeta[i].color}">${val}</strong> <small class="text-muted">(${pct}%)</small>`;
+            } else {
+                html += '<span class="text-muted">—</span>';
+            }
+            html += '</td>';
+        });
+
+        // Barre de progression + label niveau global
+        html += '<td><div class="d-flex align-items-center gap-2">';
+        html += '<div class="flex-grow-1 d-flex" style="height:20px;border-radius:4px;overflow:hidden;background:#f0f0f0">';
+        maturityLevels.forEach((level, i) => {
+            const val = row[level] || 0;
+            const pct = total > 0 ? (val / total * 100) : 0;
+            if (pct > 0) {
+                html += `<div style="width:${pct}%;background:${maturityMeta[i].color}" title="${maturityMeta[i].label}: ${val}"></div>`;
+            }
+        });
+        html += '</div>';
+        html += `<span class="badge" style="background:${maturityMeta[globalLevel].color};font-size:0.7rem;white-space:nowrap">${maturityMeta[globalLevel].label}</span>`;
+        html += '</div></td></tr>';
+    });
+
+    html += '</tbody></table>';
+
+    // Légende explicite
+    html += '<div class="row g-2 mt-1" style="font-size:0.75rem">';
+    maturityMeta.forEach(m => {
+        html += `<div class="col-md-3"><div class="d-flex align-items-start gap-1"><span style="display:inline-block;width:10px;height:10px;background:${m.color};border-radius:2px;margin-top:3px;flex-shrink:0"></span><div><strong>${m.label}</strong><br><span class="text-muted">${m.desc}</span></div></div></div>`;
+    });
+    html += '</div>';
+
+    document.getElementById('maturityMatrix').innerHTML = html;
+} else {
+    document.getElementById('maturityMatrix').innerHTML = '<p class="text-muted text-center py-4">Aucune donnée disponible.<br>Les entreprises doivent remplir le questionnaire pour alimenter ce tableau.</p>';
 }
 
 // 9. Compétences offres d'emploi

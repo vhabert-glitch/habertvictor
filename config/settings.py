@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.survey',
     'apps.dashboard',
     'apps.extractor',
+    'apps.agent',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,7 @@ DEFAULT_FROM_EMAIL = 'noreply@ia-formation-radar.fr'
 
 # Anthropic API key for AI summaries
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+
+# Agent d'analyse — accès Notion (lecture seule par défaut)
+NOTION_API_KEY = os.getenv('NOTION_API_KEY', '')
+NOTION_VERSION = os.getenv('NOTION_VERSION', '2022-06-28')

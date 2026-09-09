@@ -4,6 +4,7 @@ from data.reference import SECTORS, TRAINING_TYPES, CRITICAL_ISSUES
 
 class JobPosting(models.Model):
     title = models.CharField('Titre du poste', max_length=500)
+    company = models.CharField('Entreprise', max_length=300, blank=True)
     source = models.CharField('Source', max_length=100)
     url = models.URLField('Lien', max_length=1000, blank=True)
     sector = models.CharField('Secteur', max_length=50, choices=SECTORS, blank=True)
