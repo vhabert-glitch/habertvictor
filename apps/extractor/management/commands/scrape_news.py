@@ -119,6 +119,56 @@ RSS_FEEDS = [
         'name': 'Hugging Face Blog',
         'url': 'https://huggingface.co/blog/feed.xml',
     },
+    # ─── Énergie & Nucléaire ───
+    {
+        'name': 'Connaissance des Énergies',
+        'url': 'https://www.connaissancedesenergies.org/rss.xml',
+    },
+    {
+        'name': 'L\'Usine Nouvelle - Énergie',
+        'url': 'https://www.usinenouvelle.com/rss/energie.xml',
+    },
+    {
+        'name': 'Techniques de l\'Ingénieur - Énergie',
+        'url': 'https://www.techniques-ingenieur.fr/actualite/rss/',
+    },
+    {
+        'name': 'Actu-Environnement',
+        'url': 'https://www.actu-environnement.com/flux/rss/',
+    },
+    {
+        'name': 'Enerzine',
+        'url': 'https://www.enerzine.com/feed',
+    },
+    {
+        'name': 'SFEN (Société Française d\'Énergie Nucléaire)',
+        'url': 'https://www.sfen.org/feed/',
+    },
+    # ─── Formation, enseignement supérieur & EdTech ───
+    # Les 29 flux précédents couvrent l'IA, la tech et l'industrie, mais aucun
+    # ne parle de formation ni d'enseignement supérieur — soit précisément le
+    # métier de NEXUS. Ces flux comblent ce trou : lancements de programmes,
+    # mouvements des écoles et de l'executive education, acteurs EdTech.
+    {
+        'name': 'L\'Étudiant EducPros (enseignement supérieur)',
+        'url': 'https://www.letudiant.fr/educpros/rss.xml',
+    },
+    {
+        'name': 'Focus RH (formation & compétences)',
+        'url': 'https://www.focusrh.com/rss.xml',
+    },
+    {
+        'name': 'EdTech Actu',
+        'url': 'https://edtechactu.com/feed/',
+    },
+    {
+        'name': 'Le Monde Campus',
+        'url': 'https://www.lemonde.fr/campus/rss_full.xml',
+    },
+    {
+        'name': 'Courrier Cadres (management & executive education)',
+        'url': 'https://courriercadres.com/feed/',
+    },
     # ─── Blogs formation & emploi ───
     {
         'name': 'Blog du Modérateur',
@@ -147,6 +197,9 @@ IA_KEYWORDS = [
     'data engineer', 'données massives', 'big data',
     'automatisation', 'robotique', 'robot',
     'souveraineté numérique', 'cloud souverain',
+    'nucléaire', 'smart grid', 'maintenance prédictive',
+    'jumeau numérique', 'digital twin',
+    'transition énergétique', 'décarbonation',
 ]
 
 
