@@ -11,4 +11,4 @@ logs/
 
 
 # Espace de travail de l'agent : rapports et synthèses, contenu privé
-Agent/
+/Agent/
