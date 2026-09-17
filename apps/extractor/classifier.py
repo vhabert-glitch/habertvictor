@@ -203,6 +203,22 @@ def extract_skills(text):
         'AI Agents': ['ai agents', 'agent ia', 'agentic', 'autonomous agent', 'multi-agent'],
         'Kubernetes': ['kubernetes', 'k8s', 'openshift'],
         'Terraform': ['terraform', 'infrastructure as code', 'iac'],
+        # OPIIEC + extended skills
+        'Power BI': ['power bi', 'powerbi', 'tableau', 'qlik', 'looker', 'data visualization'],
+        'DevOps': ['devops', 'ci/cd', 'cicd', 'jenkins', 'gitlab ci', 'github actions'],
+        'API / Microservices': ['api rest', 'microservices', 'api gateway', 'graphql', 'fastapi'],
+        'Cybersecurity': ['cybersécurité', 'cyber sécurité', 'pentest', 'soc', 'siem', 'threat intelligence'],
+        'Cloud': ['aws', 'azure', 'gcp', 'google cloud', 'cloud computing', 'iaas', 'paas'],
+        'NoSQL': ['mongodb', 'cassandra', 'nosql', 'redis', 'elasticsearch'],
+        'Java': ['java ', 'spring boot', 'jvm'],
+        'Scala': ['scala', 'akka'],
+        'R': [' r ', 'rstudio', 'cran', 'tidyverse', 'shiny'],
+        'Git': ['git', 'github', 'gitlab', 'version control'],
+        'Tableau de bord': ['dashboard', 'reporting', 'kpi', 'indicateur'],
+        'IoT': ['iot', 'internet of things', 'objets connectés', 'mqtt', 'edge computing'],
+        'Blockchain': ['blockchain', 'smart contract', 'web3', 'solidity'],
+        'RPA': ['rpa', 'uipath', 'automation anywhere', 'blue prism', 'robotic process'],
+        'Project Management': ['gestion de projet', 'project management', 'prince2', 'pmp', 'safe'],
     }
     for skill_name, keywords in skill_keywords.items():
         if any(kw in text_lower for kw in keywords):
