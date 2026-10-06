@@ -11,5 +11,6 @@ urlpatterns = [
     path('nexus/', views.nexus_dashboard, name='nexus'),
     path('api/nexus/', views.nexus_api, name='nexus_api'),
     path('api/nexus/opportunities/', views.nexus_opportunities, name='nexus_opportunities'),
+    path('api/nexus/size-analysis/', views.nexus_size_analysis, name='nexus_size_analysis'),
     path('api/nexus/refresh/', views.nexus_refresh, name='nexus_refresh'),
 ]

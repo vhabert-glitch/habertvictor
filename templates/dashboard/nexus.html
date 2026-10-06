@@ -869,20 +869,197 @@ footer {
 .delay-7 { animation-delay: 0.7s; }
 .delay-8 { animation-delay: 0.8s; }
 
+/* ── Besoins par taille d'entreprise ── */
+#section-size-analysis {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.size-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.size-kpi-card {
+  padding: 1.2rem;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+.size-kpi-card:hover { transform: translateY(-2px); }
+.size-kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.size-kpi-label {
+  font-size: 0.75rem;
+  color: var(--grey);
+  margin-top: 0.3rem;
+}
+.size-kpi-sub {
+  font-size: 0.65rem;
+  color: var(--grey);
+  margin-top: 0.2rem;
+  opacity: 0.7;
+}
+
+/* Grouped bar chart */
+.size-chart-container {
+  position: relative;
+  min-height: 320px;
+}
+.size-chart-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.size-chart-label {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--white);
+  text-align: right;
+  padding-right: 0.5rem;
+}
+.size-chart-bars {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+.size-bar {
+  height: 18px;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+  position: relative;
+}
+.size-bar:hover { opacity: 0.85; }
+.size-bar-tpe { background: var(--blue); }
+.size-bar-pme { background: var(--teal); }
+.size-bar-eti { background: var(--amber); }
+.size-bar-ge { background: var(--red); }
+
+.size-chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  font-size: 0.72rem;
+}
+.size-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--grey);
+}
+.size-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* Size gap table */
+.size-gap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+.size-gap-table th {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--grey);
+  font-weight: 500;
+  text-align: left;
+}
+.size-gap-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.size-gap-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+.size-gap-size-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Size recommendations */
+.size-reco-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.size-reco-card {
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+}
+.size-reco-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.size-reco-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.size-reco-count {
+  font-size: 0.7rem;
+  color: var(--grey);
+  background: rgba(255,255,255,0.04);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+.size-reco-focus {
+  font-size: 0.72rem;
+  color: var(--teal);
+  margin-bottom: 0.5rem;
+}
+.size-reco-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.size-reco-skill {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  color: var(--white);
+}
+.size-reco-skill.unmet {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .dashboard { grid-template-columns: 1fr 1fr; }
-  #section-global, #section-sector, #section-opportunities { grid-template-columns: 1fr 1fr; }
+  #section-global, #section-sector, #section-opportunities, #section-size-analysis { grid-template-columns: 1fr 1fr; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .card-wide { grid-column: span 1; }
+  .size-kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .size-reco-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
   header { padding: 1.5rem; }
   .dashboard { grid-template-columns: 1fr; padding: 1.5rem; }
-  #section-global, #section-sector, #section-opportunities { grid-template-columns: 1fr; }
+  #section-global, #section-sector, #section-opportunities, #section-size-analysis { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: 1fr; }
   .sector-nav { padding: 1rem 1.5rem; flex-wrap: wrap; }
+  .size-kpi-row { grid-template-columns: 1fr 1fr; }
+  .size-reco-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -1115,6 +1292,84 @@ footer {
 
     </div>
 
+    <!-- ============================================ -->
+    <!-- BESOINS PAR TAILLE D'ENTREPRISE              -->
+    <!-- ============================================ -->
+    <div id="section-size-analysis">
+
+      <!-- 4 KPI cards -->
+      <div class="card card-wide animate-in delay-6" style="grid-column: 1 / -1;">
+        <div class="card-header">
+          <div class="card-title">Besoins par taille d'entreprise</div>
+          <span class="card-badge badge-amber">Segmentation</span>
+        </div>
+        <div class="size-kpi-row" id="sizeKpiRow">
+          <div class="size-kpi-card">
+            <div class="size-kpi-value" style="color: var(--blue);" id="sizeKpi-tpe">—</div>
+            <div class="size-kpi-label">TPE / Startups</div>
+            <div class="size-kpi-sub">&lt; 10 salariés</div>
+          </div>
+          <div class="size-kpi-card">
+            <div class="size-kpi-value" style="color: var(--teal);" id="sizeKpi-pme">—</div>
+            <div class="size-kpi-label">PME</div>
+            <div class="size-kpi-sub">10–249 salariés</div>
+          </div>
+          <div class="size-kpi-card">
+            <div class="size-kpi-value" style="color: var(--amber);" id="sizeKpi-eti">—</div>
+            <div class="size-kpi-label">ETI</div>
+            <div class="size-kpi-sub">250–4 999 salariés</div>
+          </div>
+          <div class="size-kpi-card">
+            <div class="size-kpi-value" style="color: var(--red);" id="sizeKpi-ge">—</div>
+            <div class="size-kpi-label">Grandes entreprises</div>
+            <div class="size-kpi-sub">5 000+ salariés</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphique comparatif barres groupées -->
+      <div class="card card-wide animate-in delay-7" style="grid-column: 1 / -1;">
+        <div class="card-header">
+          <div class="card-title">Top 10 compétences par taille</div>
+          <span class="card-badge badge-blue">Comparatif</span>
+        </div>
+        <div class="size-chart-container" id="sizeChartContainer">
+          <div class="empty-state">Chargement...</div>
+        </div>
+        <div class="size-chart-legend">
+          <span class="size-legend-item"><span class="size-legend-dot" style="background:var(--blue)"></span> TPE</span>
+          <span class="size-legend-item"><span class="size-legend-dot" style="background:var(--teal)"></span> PME</span>
+          <span class="size-legend-item"><span class="size-legend-dot" style="background:var(--amber)"></span> ETI</span>
+          <span class="size-legend-item"><span class="size-legend-dot" style="background:var(--red)"></span> GE</span>
+        </div>
+      </div>
+
+      <!-- Tableau gaps ciblés + Recommandations -->
+      <div class="card animate-in delay-7">
+        <div class="card-header">
+          <div class="card-title">Gaps par taille</div>
+          <span class="card-badge badge-red">Analyse</span>
+        </div>
+        <table class="size-gap-table" id="sizeGapTable">
+          <thead>
+            <tr><th>Taille</th><th>Skill</th><th>Demande</th><th>Offre</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card animate-in delay-8">
+        <div class="card-header">
+          <div class="card-title">Recommandations ciblées</div>
+          <span class="card-badge badge-teal">Actions</span>
+        </div>
+        <div class="size-reco-grid" id="sizeRecoGrid">
+          <div class="empty-state">Chargement...</div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
   <footer>
@@ -1122,7 +1377,7 @@ footer {
       NEXUS Intelligence Marché — Données réelles · Dashboard connecté à l'API ia-formation-radar
     </div>
     <div class="footer-note">
-      Sources : APEC, LinkedIn, Indeed, France Compétences, BOAMP, presse spécialisée
+      Sources : APEC, LinkedIn, Indeed, France Compétences, BOAMP, CPF Open Data, RNCP, presse spécialisée
     </div>
   </footer>
 
@@ -1537,8 +1792,10 @@ async function refreshNews() {
     // Clear cache and reload
     dataCache = {};
     opportunitiesCache = null;
+    sizeAnalysisCache = null;
     await renderDashboard(currentSector);
     await renderOpportunities();
+    await renderSizeAnalysis();
     dot.style.background = 'var(--teal)';
     btn.textContent = '✓ À jour';
     setTimeout(() => { btn.textContent = '⟳ Actualiser'; }, 3000);
@@ -1694,12 +1951,174 @@ async function renderOpportunities() {
 }
 
 // ============================================
+// BESOINS PAR TAILLE D'ENTREPRISE
+// ============================================
+
+let sizeAnalysisCache = null;
+
+async function fetchSizeAnalysis() {
+  if (sizeAnalysisCache) return sizeAnalysisCache;
+  try {
+    const resp = await fetch('/dashboard/api/nexus/size-analysis/', {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    sizeAnalysisCache = await resp.json();
+    return sizeAnalysisCache;
+  } catch (err) {
+    console.error('Erreur chargement analyse taille:', err);
+    return null;
+  }
+}
+
+function renderSizeKPIs(data) {
+  if (!data || !data.job_counts) return;
+  const counts = data.job_counts;
+  const ids = { tpe: 'sizeKpi-tpe', pme: 'sizeKpi-pme', eti: 'sizeKpi-eti', ge: 'sizeKpi-ge' };
+  for (const [size, id] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = counts[size] || 0;
+  }
+}
+
+function renderSizeComparison(data) {
+  const container = document.getElementById('sizeChartContainer');
+  if (!container || !data || !data.skills_by_size) return;
+  container.innerHTML = '';
+
+  const skillsMap = data.skills_by_size;
+  const skills = Object.keys(skillsMap);
+  if (skills.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune donnée disponible</div>';
+    return;
+  }
+
+  // Find max value for scaling
+  let maxVal = 1;
+  for (const skill of skills) {
+    for (const size of ['tpe', 'pme', 'eti', 'ge']) {
+      const v = skillsMap[skill][size] || 0;
+      if (v > maxVal) maxVal = v;
+    }
+  }
+
+  const sizeColors = {
+    tpe: 'size-bar-tpe',
+    pme: 'size-bar-pme',
+    eti: 'size-bar-eti',
+    ge: 'size-bar-ge',
+  };
+
+  for (const skill of skills) {
+    const row = document.createElement('div');
+    row.className = 'size-chart-row';
+
+    const label = document.createElement('div');
+    label.className = 'size-chart-label';
+    label.textContent = skill;
+    row.appendChild(label);
+
+    const barsContainer = document.createElement('div');
+    barsContainer.className = 'size-chart-bars';
+
+    for (const size of ['tpe', 'pme', 'eti', 'ge']) {
+      const val = skillsMap[skill][size] || 0;
+      const width = Math.max((val / maxVal) * 100, val > 0 ? 3 : 0);
+      const bar = document.createElement('div');
+      bar.className = `size-bar ${sizeColors[size]}`;
+      bar.style.width = `${width}%`;
+      bar.title = `${(data.size_labels || {})[size] || size.toUpperCase()}: ${val}`;
+      barsContainer.appendChild(bar);
+    }
+
+    row.appendChild(barsContainer);
+    container.appendChild(row);
+  }
+}
+
+function renderSizeGapTable(data) {
+  const tbody = document.querySelector('#sizeGapTable tbody');
+  if (!tbody || !data || !data.gap_by_size) return;
+  tbody.innerHTML = '';
+
+  const sizeLabels = data.size_labels || { tpe: 'TPE', pme: 'PME', eti: 'ETI', ge: 'GE' };
+  const sizeColors = { tpe: 'var(--blue)', pme: 'var(--teal)', eti: 'var(--amber)', ge: 'var(--red)' };
+
+  for (const size of ['ge', 'eti', 'pme', 'tpe']) {
+    const gaps = data.gap_by_size[size] || [];
+    const topGaps = gaps.filter(g => g.demand > 0).slice(0, 5);
+    topGaps.forEach((gap, i) => {
+      const tr = document.createElement('tr');
+      if (i === 0) {
+        tr.innerHTML = `
+          <td rowspan="${topGaps.length}" class="size-gap-size-label" style="color:${sizeColors[size]}">
+            ${escapeHtml(sizeLabels[size] || size.toUpperCase())}
+          </td>
+          <td>${escapeHtml(gap.skill)}</td>
+          <td style="color:var(--red);font-weight:600;">${gap.demand}</td>
+          <td style="color:var(--teal);">${gap.supply}</td>
+        `;
+      } else {
+        tr.innerHTML = `
+          <td>${escapeHtml(gap.skill)}</td>
+          <td style="color:var(--red);font-weight:600;">${gap.demand}</td>
+          <td style="color:var(--teal);">${gap.supply}</td>
+        `;
+      }
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+function renderSizeRecommendations(data) {
+  const container = document.getElementById('sizeRecoGrid');
+  if (!container || !data || !data.recommendations) return;
+  container.innerHTML = '';
+
+  const recos = data.recommendations;
+  if (recos.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune recommandation disponible</div>';
+    return;
+  }
+
+  const sizeColors = { tpe: 'var(--blue)', pme: 'var(--teal)', eti: 'var(--amber)', ge: 'var(--red)' };
+
+  recos.forEach(reco => {
+    const skillsHtml = (reco.top_skills || []).map(s => {
+      const isUnmet = (reco.unmet_skills || []).includes(s);
+      return `<span class="size-reco-skill${isUnmet ? ' unmet' : ''}">${escapeHtml(s)}</span>`;
+    }).join('');
+
+    container.innerHTML += `
+      <div class="size-reco-card" style="border-left: 3px solid ${sizeColors[reco.size] || 'var(--grey)'}">
+        <div class="size-reco-header">
+          <span class="size-reco-title" style="color:${sizeColors[reco.size] || 'var(--white)'}">${escapeHtml(reco.size_label)}</span>
+          <span class="size-reco-count">${reco.job_count} offres</span>
+        </div>
+        <div class="size-reco-focus">${escapeHtml(reco.focus)}</div>
+        <div class="size-reco-skills">${skillsHtml}</div>
+      </div>
+    `;
+  });
+}
+
+async function renderSizeAnalysis() {
+  const data = await fetchSizeAnalysis();
+  if (!data) return;
+  renderSizeKPIs(data);
+  renderSizeComparison(data);
+  renderSizeGapTable(data);
+  renderSizeRecommendations(data);
+}
+
+// ============================================
 // INIT
 // ============================================
 
 updateTimestamp();
 
-// Initial render + freshness check + opportunities
+// Initial render + freshness check + opportunities + size analysis
 (async () => {
   await renderDashboard('all');
   // Check data freshness after first load
@@ -1709,6 +2128,8 @@ updateTimestamp();
   }
   // Load opportunities section
   await renderOpportunities();
+  // Load size analysis section
+  await renderSizeAnalysis();
 })();
 </script>
 </body>

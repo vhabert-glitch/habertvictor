@@ -14,6 +14,7 @@ from apps.extractor.models import JobPosting
 from apps.extractor.classifier import (
     classify_training_type, classify_sector,
     compute_relevance_score, extract_skills,
+    classify_company_size,
 )
 
 logger = logging.getLogger(__name__)
@@ -148,6 +149,7 @@ class Command(BaseCommand):
                     'training_type_match': classify_training_type(full_text),
                     'raw_description': description[:2000],
                     'relevance_score': compute_relevance_score(full_text),
+                    'company_size': classify_company_size(company, description),
                 }
             )
             return 1 if created else 0

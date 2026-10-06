@@ -1,5 +1,5 @@
 from django.db import models
-from data.reference import SECTORS, TRAINING_TYPES, CRITICAL_ISSUES
+from data.reference import SECTORS, TRAINING_TYPES, CRITICAL_ISSUES, COMPANY_SIZES
 
 
 class JobPosting(models.Model):
@@ -16,6 +16,10 @@ class JobPosting(models.Model):
     )
     raw_description = models.TextField('Description brute', blank=True)
     relevance_score = models.FloatField('Score de pertinence', default=0.0)
+    company_size = models.CharField(
+        'Taille entreprise', max_length=10,
+        choices=COMPANY_SIZES, blank=True, default='', db_index=True,
+    )
     extracted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

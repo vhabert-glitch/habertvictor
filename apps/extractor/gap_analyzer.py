@@ -288,3 +288,177 @@ def get_opportunities_data():
         'role_map': compute_role_competency_map(),
         'recommendations': generate_course_recommendations(),
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  Analyse par taille d'entreprise (TPE / PME / ETI / GE)
+# ═══════════════════════════════════════════════════════════════════════
+
+SIZE_LABELS = {
+    'tpe': 'TPE (< 10)',
+    'pme': 'PME (10-249)',
+    'eti': 'ETI (250-4999)',
+    'ge': 'GE (5000+)',
+}
+
+
+def compute_skill_demand_by_size():
+    """Compte les skills demandés par taille d'entreprise.
+
+    Returns:
+        dict: {tpe: Counter, pme: Counter, eti: Counter, ge: Counter}
+    """
+    result = {size: Counter() for size in SIZE_LABELS}
+    for job in JobPosting.objects.exclude(company_size=''):
+        if job.company_size in result:
+            for skill in job.skills:
+                result[job.company_size][skill] += 1
+    return result
+
+
+def compute_gap_by_size():
+    """Gap analysis filtré par company_size.
+
+    Returns:
+        dict: {tpe: list[gap_dict], pme: ..., eti: ..., ge: ...}
+    """
+    demand_by_size = compute_skill_demand_by_size()
+    supply = compute_skill_supply()
+
+    result = {}
+    for size_code, demand in demand_by_size.items():
+        all_skills = set(demand.keys()) | set(supply.keys())
+        gaps = []
+        for skill in all_skills:
+            d = demand.get(skill, 0)
+            s = supply.get(skill, 0)
+            if d == 0:
+                continue
+            gap_score = d * 2.0 if s == 0 else d / s
+            if gap_score >= 5.0:
+                gap_level = 'critical'
+            elif gap_score >= 3.0:
+                gap_level = 'high'
+            elif gap_score >= 1.5:
+                gap_level = 'medium'
+            else:
+                gap_level = 'low'
+            gaps.append({
+                'skill': skill,
+                'demand': d,
+                'supply': s,
+                'gap_score': round(gap_score, 2),
+                'gap_level': gap_level,
+            })
+        gaps.sort(key=lambda x: x['gap_score'], reverse=True)
+        result[size_code] = gaps[:10]
+
+    return result
+
+
+def _generate_size_recommendations(demand_by_size, supply):
+    """Génère des recommandations ciblées par taille."""
+    size_recos = {
+        'tpe': {
+            'label': 'TPE / Startups',
+            'focus': 'Formations courtes et pratiques',
+        },
+        'pme': {
+            'label': 'PME',
+            'focus': 'Montée en compétences progressive',
+        },
+        'eti': {
+            'label': 'ETI',
+            'focus': 'Certifications et spécialisations',
+        },
+        'ge': {
+            'label': 'Grandes entreprises',
+            'focus': 'MLOps, gouvernance et déploiement à l\'échelle',
+        },
+    }
+
+    recommendations = []
+    for size_code, info in size_recos.items():
+        demand = demand_by_size.get(size_code, Counter())
+        top_skills = demand.most_common(5)
+        if not top_skills:
+            continue
+
+        # Find skills with worst supply gap
+        unmet = []
+        for skill, count in top_skills:
+            s = supply.get(skill, 0)
+            if s == 0 or count / max(s, 1) >= 2.0:
+                unmet.append(skill)
+
+        recommendations.append({
+            'size': size_code,
+            'size_label': info['label'],
+            'focus': info['focus'],
+            'top_skills': [s for s, _ in top_skills],
+            'unmet_skills': unmet[:3],
+            'job_count': sum(demand.values()),
+        })
+
+    return recommendations
+
+
+def get_size_comparison_data():
+    """Point d'entrée : compare les besoins entre tailles d'entreprise.
+
+    Returns:
+        dict: {
+            job_counts: {tpe: N, pme: N, eti: N, ge: N},
+            skills_by_size: {skill: {tpe: N, pme: N, eti: N, ge: N}},
+            gap_by_size: {tpe: [...], pme: [...], ...},
+            recommendations: [...]
+        }
+    """
+    demand_by_size = compute_skill_demand_by_size()
+    supply = compute_skill_supply()
+
+    # Job counts per size
+    job_counts = {}
+    for size_code in SIZE_LABELS:
+        job_counts[size_code] = JobPosting.objects.filter(
+            company_size=size_code
+        ).count()
+
+    # Top 10 skills across all sizes for comparison chart
+    all_demand = Counter()
+    for demand in demand_by_size.values():
+        all_demand += demand
+    top_skills = [s for s, _ in all_demand.most_common(10)]
+
+    # Build comparison matrix: skill × size
+    skills_by_size = {}
+    for skill in top_skills:
+        skills_by_size[skill] = {
+            size_code: demand_by_size[size_code].get(skill, 0)
+            for size_code in SIZE_LABELS
+        }
+
+    # Gap by size
+    gap_by_size = {}
+    for size_code, demand in demand_by_size.items():
+        gaps = []
+        for skill in top_skills:
+            d = demand.get(skill, 0)
+            s = supply.get(skill, 0)
+            gaps.append({
+                'skill': skill,
+                'demand': d,
+                'supply': s,
+            })
+        gap_by_size[size_code] = gaps
+
+    # Recommendations
+    recommendations = _generate_size_recommendations(demand_by_size, supply)
+
+    return {
+        'job_counts': job_counts,
+        'size_labels': SIZE_LABELS,
+        'skills_by_size': skills_by_size,
+        'gap_by_size': gap_by_size,
+        'recommendations': recommendations,
+    }

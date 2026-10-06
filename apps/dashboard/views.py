@@ -783,6 +783,14 @@ def nexus_opportunities(request):
 
 
 @login_required
+def nexus_size_analysis(request):
+    """API JSON pour l'analyse par taille d'entreprise."""
+    from apps.extractor.gap_analyzer import get_size_comparison_data
+    data = get_size_comparison_data()
+    return JsonResponse(data)
+
+
+@login_required
 def nexus_refresh(request):
     """Trigger news + jobs scrape and return status."""
     if request.method != 'POST':
