@@ -13,7 +13,9 @@ from pathlib import Path
 from django.conf import settings
 
 DOCS_DIR = Path(settings.BASE_DIR) / 'Agent' / 'Syntheses'
-EXTENSIONS = {'.md', '.txt', '.csv'}
+# Un brief ou une note arrive naturellement en Word ou en PDF : ne lire que
+# du texte brut obligeait à une conversion manuelle, donc à ne rien déposer.
+EXTENSIONS = {'.md', '.txt', '.csv', '.docx', '.pdf'}
 APERCU = 400
 MAX_CARACTERES = 60_000
 
@@ -37,6 +39,34 @@ def _cle(chemin):
     return str(chemin.relative_to(DOCS_DIR))
 
 
+def _texte(chemin):
+    """Extrait le texte d'un document, quel que soit son format."""
+    suffixe = chemin.suffix.lower()
+
+    if suffixe == '.docx':
+        from docx import Document
+        doc = Document(chemin)
+        morceaux = [p.text for p in doc.paragraphs if p.text.strip()]
+        for table in doc.tables:
+            for rang in table.rows:
+                cellules = [c.text.strip() for c in rang.cells]
+                if any(cellules):
+                    morceaux.append(' | '.join(cellules))
+        return '\n'.join(morceaux)
+
+    if suffixe == '.pdf':
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            try:
+                from PyPDF2 import PdfReader
+            except ImportError:
+                return "[PDF illisible : installer pypdf (pip install pypdf)]"
+        return '\n'.join((page.extract_text() or '') for page in PdfReader(chemin).pages)
+
+    return chemin.read_text(encoding='utf-8', errors='replace')
+
+
 def lister():
     """Inventaire des documents déposés, du plus récemment modifié au plus ancien."""
     import datetime as dt
@@ -52,7 +82,7 @@ def lister():
         'document': _cle(c),
         'modifie': dt.datetime.fromtimestamp(c.stat().st_mtime).strftime('%Y-%m-%d'),
         'taille': c.stat().st_size,
-        'apercu': c.read_text(encoding='utf-8', errors='replace')[:APERCU].strip(),
+        'apercu': _texte(c)[:APERCU].strip(),
     } for c in fichiers]}
 
 
@@ -64,7 +94,7 @@ def lire(document):
             f"Document '{document}' introuvable. Disponibles : "
             f"{', '.join(sorted(index)) or 'aucun'}."
         )
-    texte = index[document].read_text(encoding='utf-8', errors='replace')
+    texte = _texte(index[document])
     tronque = len(texte) > MAX_CARACTERES
     return {
         'document': document,

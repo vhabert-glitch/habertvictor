@@ -107,12 +107,13 @@ DATASETS = {
         'modele': 'extractor.FormationCatalog',
         'description': "Catalogue des formations IA existantes sur le marché — "
                        "la référence pour repérer ce que l'offre ne couvre pas",
-        'fiabilite': "TABLE VIDE — la source n'est pas branchée (l'API visée par le "
-                     "scraper n'existe pas ; les lignes fictives qui la remplissaient "
-                     "ont été supprimées). Tu n'as donc AUCUNE vision de l'offre de "
-                     "formation du marché. Si on te demande ce qui « n'est couvert par "
-                     "aucune formation », réponds que tu ne peux pas le déterminer et "
-                     "explique pourquoi, au lieu de conclure sur une table vide.",
+        'fiabilite': "Couverture partielle et hétérogène : on y trouve à la fois des "
+                     "formations réelles (avec URL, prix, durée) et des référentiels de "
+                     "compétences (OPIIEC) ou des fiches de certification (France "
+                     "Compétences / Caisse des Dépôts) qui ne sont pas des formations "
+                     "vendues. Vérifie avec radar_sample ce que tu manipules avant de "
+                     "conclure, et ne présente pas ce catalogue comme exhaustif de "
+                     "l'offre française.",
         'date': 'extracted_at',
         'groupes': ['sector', 'training_type', 'provider', 'format'],
         'listes': ['skills_covered'],
