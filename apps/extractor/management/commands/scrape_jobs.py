@@ -167,7 +167,7 @@ class Command(BaseCommand):
             return 0
 
         count = 0
-        for query in SEARCH_QUERIES[:12]:
+        for query in SEARCH_QUERIES:
             try:
                 url = (
                     f"https://api.adzuna.com/v1/api/jobs/fr/search/1"
@@ -193,7 +193,7 @@ class Command(BaseCommand):
 
     def _scrape_apec(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:12]:
+        for query in SEARCH_QUERIES:
             try:
                 url = f"https://www.apec.fr/candidat/recherche-emploi.html/emploi?motsCles={quote_plus(query)}"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -223,7 +223,7 @@ class Command(BaseCommand):
 
     def _scrape_indeed(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:12]:
+        for query in SEARCH_QUERIES:
             try:
                 url = f"https://fr.indeed.com/jobs?q={quote_plus(query)}&l=France&limit={limit}"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -275,7 +275,7 @@ class Command(BaseCommand):
 
     def _scrape_wttj(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:12]:
+        for query in SEARCH_QUERIES:
             try:
                 # WTTJ a une API publique pour la recherche
                 api_url = (
@@ -369,7 +369,7 @@ class Command(BaseCommand):
             token = token_resp.json()['access_token']
 
             # 2. Rechercher des offres
-            for query in SEARCH_QUERIES[:12]:
+            for query in SEARCH_QUERIES:
                 try:
                     search_resp = requests.get(
                         'https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search',
@@ -402,7 +402,7 @@ class Command(BaseCommand):
     def _france_travail_scrape(self, limit):
         """Scraping HTML du site France Travail."""
         count = 0
-        for query in SEARCH_QUERIES[:4]:
+        for query in SEARCH_QUERIES:
             try:
                 url = f"https://candidat.francetravail.fr/offres/recherche?motsCles={quote_plus(query)}&offresPartenaires=true"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -433,7 +433,7 @@ class Command(BaseCommand):
 
     def _scrape_hellowork(self, limit):
         count = 0
-        for query in SEARCH_QUERIES[:12]:
+        for query in SEARCH_QUERIES:
             try:
                 url = f"https://www.hellowork.com/fr-fr/emploi/recherche.html?k={quote_plus(query)}&l=France"
                 resp = requests.get(url, headers=HEADERS, timeout=15)
